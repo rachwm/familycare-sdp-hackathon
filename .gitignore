@@ -218,3 +218,39 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+
+If the nested code block gives you difficulty, leave out the inner triple backticks and keep the JSON as plain text.
+
+# Part 6: Update `.gitignore`
+
+Open the existing `.gitignore` and add these entries at the bottom:
+
+```gitignore
+# Python environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+.env.*
+*.key
+
+# React and Node
+node_modules/
+frontend/dist/
+
+# Editors
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Temporary and model files
+*.log
+.ipynb_checkpoints/
