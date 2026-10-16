@@ -1,9 +1,19 @@
-<<<<<<< HEAD
-from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from __future__ import annotations
 
-# Incoming sensor payload from the Raspberry Pi
+from datetime import datetime
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+
+# ============================================================
+# Utility anomaly models — Member 2
+# ============================================================
+
+
 class UtilityPayload(BaseModel):
+    """Incoming utility-sensor payload from the Raspberry Pi."""
+
     timestamp: str
     power_kw: float
     water_lpm: float
@@ -11,29 +21,31 @@ class UtilityPayload(BaseModel):
     door_transitions_15m: int
     resident_state: str = "HOME"
 
-# Outgoing incident response format agreed upon in api-contract.md
+
 class IncidentResponse(BaseModel):
+    """Utility-anomaly result returned by the detection pipeline."""
+
     incident_id: str
     timestamp: str
     is_anomaly: bool
     confidence: float
     reason: str
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
     resident_state: str
 
-# Reminder schema for medication/routine schedules
+
 class Reminder(BaseModel):
+    """Medication or routine reminder."""
+
     id: str
     time: str
     message: str
-    type: str  # e.g., 'medication', 'hydration', 'routine'
-=======
-from __future__ import annotations
+    type: str
 
-from datetime import datetime
-from typing import Literal
 
-from pydantic import BaseModel, Field
+# ============================================================
+# Fall and incident models — Member 1
+# ============================================================
 
 
 ResidentResponseType = Literal[
@@ -114,7 +126,6 @@ class FallEvent(BaseModel):
     requires_resident_check_in: bool
     simulation: bool = False
 
-    # Added after the resident responds or times out.
     resident_response: ResidentResponseType | None = None
     response_timestamp: datetime | None = None
     requires_responder: bool = False
@@ -126,7 +137,7 @@ class FallEvent(BaseModel):
 
 
 class FallEventAccepted(BaseModel):
-    """Response returned after accepting an event."""
+    """Response returned after accepting a fall event."""
 
     accepted: bool
     message: str
@@ -163,4 +174,3 @@ class IncidentActionResult(BaseModel):
     action: IncidentActionType
     message: str
     event: FallEvent
->>>>>>> ab24e18d6aef4960ef51a9e738e0eedf79783e5b
