@@ -229,3 +229,4 @@ frontend/dist/
 .idea/
 .DS_Store
 Thumbs.db
+data/utility/processed/training_feature_matrix.csv
