@@ -1,0 +1,18 @@
+# Backend API
+fastapi
+uvicorn[standard]
+
+# Data processing and machine learning
+numpy
+pandas
+scikit-learn
+joblib
+
+# Model-result charts
+matplotlib
+seaborn
+
+# Testing
+pytest
+pytest-asyncio
+httpx
