@@ -13,7 +13,7 @@ export function ResidentCard({ scenario, detail = false }: { scenario: Scenario;
     </div>
   </>;
   return <section className={`resident-card tone-${state.tone}${normal ? ' resident-card--normal' : ''}`} aria-label="Linked resident status">
-    {detail ? <div className="resident-summary">{content}</div> : <Link className="resident-summary" to={path}>{content}<Icon name="chevron" className="resident-chevron" /></Link>}
+    <div className="resident-summary">{content}</div>
     {!normal && !detail && <Link className="incident-button" to={path}>{scenario === 'completed' ? 'View Visit Summary' : 'View Incident Details'}<Icon name="arrow" /></Link>}
     {scenario === 'unusual' && detail && <div className="resident-note"><Icon name="home" /><span><strong>No movement detected</strong><br />for 4 hours.</span></div>}
   </section>;
