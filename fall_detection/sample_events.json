@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "event_id": "fall-48228ba9d2c0",
+  "event_type": "possible_fall",
+  "source": "fall_detector",
+  "resident_id": "resident-01",
+  "location": "living_room",
+  "severity": "warning",
+  "status": "awaiting_resident_response",
+  "confidence": 0.7514,
+  "timestamp": "2026-10-16T02:01:43+08:00",
+  "requires_resident_check_in": true,
+  "details": {
+    "model_version": "random-forest-v1",
+    "decision_threshold": 0.45,
+    "source_file": "Areeb_back_1.csv",
+    "evidence": {
+      "number_of_frames": 24,
+      "total_detected_points": 238,
+      "z_centroid_start": -0.1211,
+      "z_centroid_end": -0.0086,
+      "z_centroid_change": 0.1126,
+      "maximum_downward_z_step": 0.1367,
+      "mean_absolute_velocity": 0.0275,
+      "maximum_absolute_velocity": 0.3184,
+      "centroid_path_length": 6.6787
+    }
+  }
+}
