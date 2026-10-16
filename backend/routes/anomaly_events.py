@@ -8,6 +8,8 @@ import os
 # Ensure the utility_anomaly module can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from utility_anomaly.anomaly_detector import UtilityAnomalyDetector
+from backend.models.events import UtilityPayload, IncidentResponse
+from backend.services.websocket_manager import manager
 
 router = APIRouter()
 # Load ML Models and Adaptive Baseline once on startup
