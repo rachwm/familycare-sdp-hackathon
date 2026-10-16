@@ -1,9 +1,51 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+# ============================================================
+# Utility anomaly models — Member 2
+# ============================================================
+
+
+class UtilityPayload(BaseModel):
+    """Incoming utility-sensor payload from the Raspberry Pi."""
+
+    timestamp: str
+    power_kw: float
+    water_lpm: float
+    inactivity_mins: float
+    door_transitions_15m: int
+    resident_state: str = "HOME"
+
+
+class IncidentResponse(BaseModel):
+    """Utility-anomaly result returned by the detection pipeline."""
+
+    incident_id: str
+    timestamp: str
+    is_anomaly: bool
+    confidence: float
+    reason: str
+    metrics: dict[str, Any]
+    resident_state: str
+
+
+class Reminder(BaseModel):
+    """Medication or routine reminder."""
+
+    id: str
+    time: str
+    message: str
+    type: str
+
+
+# ============================================================
+# Fall and incident models — Member 1
+# ============================================================
 
 
 ResidentResponseType = Literal[
@@ -84,7 +126,6 @@ class FallEvent(BaseModel):
     requires_resident_check_in: bool
     simulation: bool = False
 
-    # Added after the resident responds or times out.
     resident_response: ResidentResponseType | None = None
     response_timestamp: datetime | None = None
     requires_responder: bool = False
@@ -96,7 +137,7 @@ class FallEvent(BaseModel):
 
 
 class FallEventAccepted(BaseModel):
-    """Response returned after accepting an event."""
+    """Response returned after accepting a fall event."""
 
     accepted: bool
     message: str
