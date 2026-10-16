@@ -1,0 +1,7 @@
+class_name,activity,recordings,correct,errors,activity_accuracy,mean_fall_score,minimum_fall_score,maximum_fall_score
+Fall,back,15,14,1,0.9333,0.5836,0.3894,0.7067
+Fall,front,21,18,3,0.8571,0.5874,0.3752,0.8469
+Fall,side,15,14,1,0.9333,0.6525,0.4473,0.7857
+Not,bow,15,13,2,0.8667,0.3225,0.1456,0.4647
+Not,squat,15,14,1,0.9333,0.3502,0.196,0.4676
+Not,walk,21,14,7,0.6667,0.3812,0.093,0.8438

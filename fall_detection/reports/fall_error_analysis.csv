@@ -1,0 +1,16 @@
+error_type,source_file,subject,activity,class_name,label,fall_probability,decision_threshold,threshold_margin,predicted_label
+false_negative,Areeb_back_2.csv,Areeb,back,Fall,1,0.3893547619047619,0.45,-0.0606,0
+false_negative,Towsif_front_5.csv,Towsif,front,Fall,1,0.3861,0.45,-0.0639,0
+false_negative,Towsif_front_6.csv,Towsif,front,Fall,1,0.3752333333333332,0.45,-0.0748,0
+false_negative,Towsif_front_7.csv,Towsif,front,Fall,1,0.4428666666666666,0.45,-0.0071,0
+false_negative,Towsif_side_2.csv,Towsif,side,Fall,1,0.4473000000000001,0.45,-0.0027,0
+false_positive,Areeb_squat_5.csv,Areeb,squat,Not,0,0.4676071428571428,0.45,0.0176,1
+false_positive,Raffay_bow_1.csv,Raffay,bow,Not,0,0.4647142857142858,0.45,0.0147,1
+false_positive,Raffay_bow_5.csv,Raffay,bow,Not,0,0.4595476190476191,0.45,0.0095,1
+false_positive,Raffay_walk_1.csv,Raffay,walk,Not,0,0.8438000000000001,0.45,0.3938,1
+false_positive,Raffay_walk_2.csv,Raffay,walk,Not,0,0.7132333333333333,0.45,0.2632,1
+false_positive,Raffay_walk_3.csv,Raffay,walk,Not,0,0.7561333333333334,0.45,0.3061,1
+false_positive,Raffay_walk_4.csv,Raffay,walk,Not,0,0.7221333333333333,0.45,0.2721,1
+false_positive,Raffay_walk_5.csv,Raffay,walk,Not,0,0.7267809523809522,0.45,0.2768,1
+false_positive,Raffay_walk_6.csv,Raffay,walk,Not,0,0.6715142857142857,0.45,0.2215,1
+false_positive,Raffay_walk_7.csv,Raffay,walk,Not,0,0.564047619047619,0.45,0.114,1
