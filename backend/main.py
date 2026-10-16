@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import settings
-from backend.routes.fall_events import (
-    router as fall_events_router,
-)
+from backend.routes.anomaly_events import router as anomaly_events_router
+from backend.routes.fall_events import router as fall_events_router
 from backend.routes.incidents import router as incidents_router
+from backend.routes.reminders import router as reminders_router
 from backend.routes.simulator import router as simulator_router
 
 
@@ -28,9 +28,12 @@ app.add_middleware(
 )
 
 
+# Register all FamilyCare API routes.
 app.include_router(fall_events_router)
 app.include_router(incidents_router)
 app.include_router(simulator_router)
+app.include_router(anomaly_events_router)
+app.include_router(reminders_router)
 
 
 @app.get("/")
