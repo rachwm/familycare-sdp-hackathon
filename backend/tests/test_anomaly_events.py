@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app  # Assuming Member 1 sets up the main FastAPI app
+from backend.main import app  # Assuming Member 1 sets up the main FastAPI app
 
 client = TestClient(app)
 
