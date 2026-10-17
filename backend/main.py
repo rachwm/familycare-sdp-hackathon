@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-
+from backend.services.websocket_manager import manager
 from backend.config import settings
 from backend.routes.anomaly_events import router as anomaly_events_router
 from backend.routes.fall_events import router as fall_events_router
@@ -52,3 +52,13 @@ def health() -> dict[str, str]:
         "environment": settings.environment,
         "timezone": settings.timezone,
     }
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keeps connection open waiting for incoming messages/pings
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
