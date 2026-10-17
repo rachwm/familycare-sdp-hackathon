@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Dict
 
 from pydantic import BaseModel, Field
 
@@ -174,3 +174,19 @@ class IncidentActionResult(BaseModel):
     action: IncidentActionType
     message: str
     event: FallEvent
+
+# Responder Assignment Payload
+class AssignResponderRequest(BaseModel):
+    responder_id: str
+    responder_name: str
+    responder_phone: str
+
+# Responder Status Update Payload
+class UpdateResponderStatusRequest(BaseModel):
+    responder_status: str  # 'accepted', 'on_the_way', 'arrived'
+
+# Responder Visit Report Submission
+class VisitReportRequest(BaseModel):
+    summary: str
+    resident_condition: str  # 'safe', 'transported_to_clinic', 'minor_injury'
+    action_taken: str

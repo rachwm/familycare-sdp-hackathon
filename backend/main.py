@@ -21,7 +21,7 @@ app = FastAPI(
 # Allow the local React application to access the API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(settings.cors_origins),
+    allow_origins=["*"],  # Allows all origins during local hackathon development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

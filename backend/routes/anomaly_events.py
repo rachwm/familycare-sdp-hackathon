@@ -1,6 +1,8 @@
 from pathlib import Path
 import uuid
 
+import os
+import sys
 from fastapi import APIRouter
 
 from backend.models.events import IncidentResponse, UtilityPayload
@@ -10,12 +12,9 @@ from utility_anomaly.anomaly_detector import UtilityAnomalyDetector
 
 router = APIRouter()
 
-# Resolve the model directory from the repository root.
-MODEL_DIR = (
-    Path(__file__).resolve().parents[2]
-    / "utility_anomaly"
-    / "models"
-)
+# 2. Build dynamic absolute path to model binary
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", "utility_anomaly", "models"))
 
 # Load the trained model and adaptive baseline once.
 detector = UtilityAnomalyDetector(model_dir=str(MODEL_DIR))
@@ -42,7 +41,7 @@ async def process_utility_event(
     if response.is_anomaly:
         await manager.broadcast(
             message_type="UTILITY_ANOMALY_ALERT",
-            data=response.model_dump(),
+            data=response.dict()
         )
 
     return response

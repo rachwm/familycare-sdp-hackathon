@@ -9,6 +9,9 @@ from backend.models.events import (
     IncidentActionRequest,
     IncidentActionResult,
     IncidentStatus,
+    AssignResponderRequest,
+    UpdateResponderStatusRequest,
+    VisitReportRequest
 )
 from backend.services.incident_manager import (
     IncidentNotFoundError,
@@ -16,6 +19,7 @@ from backend.services.incident_manager import (
     incident_manager,
 )
 
+from backend.services.websocket_manager import manager
 
 router = APIRouter(
     prefix="/api/incidents",
@@ -101,3 +105,45 @@ def apply_incident_action(
         message=messages[request.action],
         event=updated_event,
     )
+
+# 1. Assign Responder to Incident
+@router.post("/api/incidents/{event_id}/assign-responder")
+async def assign_responder(event_id: str, payload: AssignResponderRequest):
+    # Broadcast status change to family dashboard via WebSocket
+    await manager.broadcast(
+        message_type="RESPONDER_ASSIGNED",
+        data={
+            "event_id": event_id,
+            "responder_name": payload.responder_name,
+            "responder_phone": payload.responder_phone,
+            "status": "assigned"
+        }
+    )
+    return {"status": "success", "message": f"Responder {payload.responder_name} assigned."}
+
+# 2. Update Responder Status (accepted, on_the_way, arrived)
+@router.post("/api/incidents/{event_id}/responder-status")
+async def update_responder_status(event_id: str, payload: UpdateResponderStatusRequest):
+    await manager.broadcast(
+        message_type="RESPONDER_STATUS_UPDATE",
+        data={
+            "event_id": event_id,
+            "responder_status": payload.responder_status
+        }
+    )
+    return {"status": "success", "current_status": payload.responder_status}
+
+# 3. Submit Visit Report & Resolve Incident
+@router.post("/api/incidents/{event_id}/visit-report")
+async def submit_visit_report(event_id: str, payload: VisitReportRequest):
+    await manager.broadcast(
+        message_type="INCIDENT_RESOLVED_WITH_REPORT",
+        data={
+            "event_id": event_id,
+            "summary": payload.summary,
+            "resident_condition": payload.resident_condition,
+            "action_taken": payload.action_taken,
+            "status": "resolved"
+        }
+    )
+    return {"status": "success", "message": "Visit report submitted and family updated."}
