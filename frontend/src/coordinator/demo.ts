@@ -12,9 +12,10 @@ export const steps = [
   ['checked', 'Resident checked', '11:03 AM'], ['completed', 'Visit completed', '11:20 AM'],
 ] as const;
 export type Stage = typeof steps[number][0];
+export interface VisitReport { condition: 'safe' | 'needs-assistance'; notes: string; submittedAt: string }
 export interface DemoState {
   stage: Stage; events: Activity[]; escalated: boolean; responder: string | null;
-  declined: boolean; excluded: string[]; unavailable: string[]; source: 'family' | 'coordinator';
+  declined: boolean; excluded: string[]; unavailable: string[]; source: 'family' | 'coordinator' | 'responder'; visitReport?: VisitReport;
 }
 export const responders = [
   { id:'daniel', name:'Daniel Lim', area:'City of Elmina', available:true, suitable:true, travelMinutes:8, distance:'2.1 km', capability:'Resident wellbeing visits' },
@@ -72,6 +73,7 @@ export function transition(state: DemoState, action: Action): DemoState {
   return {...state,stage:next,declined:false,responder:selected ?? null,events:[...state.events,event]};
 }
 export function familyScenario(state: DemoState): Scenario {
+  if (state.visitReport?.condition === 'needs-assistance') return 'requested';
   switch(state.stage) {
     case 'pending': return 'fall';
     case 'no-response': case 'matching': return 'requested';

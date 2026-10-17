@@ -12,6 +12,7 @@ export function familyConfig(scenario:Scenario,demo?:DemoState) {
   const original=getScenario(scenario);
   if(!demo) return original;
   const latest=demo.events.at(-1);
+  if (demo.visitReport?.condition === 'needs-assistance') return {...original,time:currentTime(demo),status:'Needs further assistance',description:familyDisplayText(latest?.description ?? ''),tone:'orange' as const,icon:'alert' as const};
   return {...original,time:currentTime(demo),status:demo.stage==='normal'?original.status:statusLabel(demo),description:demo.stage==='normal'?original.description:familyDisplayText(latest?.description??original.description)};
 }
 export function familyActivities(scenario:Scenario,demo?:DemoState) {
