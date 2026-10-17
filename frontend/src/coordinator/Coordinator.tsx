@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { CoordinatorDemo } from './CoordinatorDemo';
+import { useAdvancedCoordinator } from './demoView';
 import { Brand } from '../components/Brand';
 import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
@@ -13,7 +15,7 @@ const base=incidentPath(incidentId);
 const preferencesKey='familycare-coordinator-preferences';
 interface Preferences { notifications:boolean; compact:boolean }
 function readPreferences():Preferences { try {const p=JSON.parse(localStorage.getItem(preferencesKey)??'null');return {notifications:p?.notifications!==false,compact:p?.compact===true};} catch {return {notifications:true,compact:false};} }
-export function Coordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch<Action>}) {
+function AdvancedCoordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch<Action>}) {
   const [sidebar,setSidebar]=useState(false),[notice,setNotice]=useState(false),[profile,setProfile]=useState(false);
   const [dialog,setDialog]=useState<'reassign'|'escalate'|null>(null),[busy,setBusy]=useState(false),[feedback,setFeedback]=useState('');
   const [preferences,setPreferences]=useState(readPreferences);
@@ -79,4 +81,11 @@ export function Coordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch<
       <section className="coord-demo" aria-label="Coordinator demonstration controls"><div><strong>Interactive demonstration</strong><p>Mock data only · no live monitoring or dispatch</p></div><label>Scenario<select aria-label="Coordinator demo scenario" value={state.stage} onChange={e=>{setFeedback('');dispatch({type:'select',stage:e.target.value as Stage});}}>{steps.map(([id,title])=><option key={id} value={id}>{title}</option>)}</select></label><button className="coord-btn" disabled={state.stage==='completed'||state.escalated||actionRequired||busy} onClick={()=>dispatch({type:'advance'})}>{state.stage==='checked'?'Submit Visit Report & Resolve':state.stage==='assigned'?`Simulate ${state.responder} Accepting`:state.stage==='accepted'?'Confirm Demo Departure':state.stage==='matching'?'Complete Matching Now':'Advance Demo'}</button>{state.stage==='assigned'&&<button className="coord-btn secondary" onClick={()=>dispatch({type:'decline'})}>Simulate {state.responder} Declining</button>}<button className="coord-reset" onClick={()=>{setFeedback('');dispatch({type:'select',stage:'requested'});}}>Reset demo</button><p className="coord-status" role="status" aria-live="polite">{label}{state.stage==='matching'&&candidate?` · Matching candidate: ${candidate.name}`:''}</p></section>
       <footer className="coord-footer"><strong>FamilyCare · City of Elmina</strong><span>SDP Hackathon · Prototype demonstration</span><span>Demo updated: {time} · 16 Oct 2026</span></footer>
     </main>{dialog&&<Confirmation kind={dialog} busy={busy} close={()=>setDialog(null)} confirm={confirmAction}/>}</div>;
+}
+
+export function Coordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch<Action>}) {
+  const location = useLocation();
+  return useAdvancedCoordinator(location.pathname, location.search)
+    ? <AdvancedCoordinator state={state} dispatch={dispatch}/>
+    : <CoordinatorDemo state={state} dispatch={dispatch}/>;
 }
