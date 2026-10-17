@@ -88,7 +88,7 @@ export default function App() {
   return <LiveContext.Provider value={{ mode, ...live }}><FamilyDemoContext.Provider value={mode === 'demo' && !unusual && demo.source === 'coordinator' ? demo : undefined}>
     <div className={`app-shell${detail ? ' app-shell--detail' : ''}`}>
       <Botanical position="top" />
-      {!detail && <header className="app-header"><Link to="/" aria-label="FamilyCare home"><Brand /></Link><Link className="icon-button notification-button" to="/alerts" aria-label="View alerts"><Icon name="bell" />{(mode === 'live' ? live.incidents.some(incident => incident.status !== 'resolved') : scenario !== 'normal' && scenario !== 'completed') && <span className="notification-dot" />}</Link></header>}
+      <header className="app-header"><Link to="/" aria-label="FamilyCare home"><Brand /></Link><Link className="icon-button notification-button" to="/alerts" aria-label="View alerts"><Icon name="bell" />{(mode === 'live' ? live.incidents.some(incident => incident.status !== 'resolved') : scenario !== 'normal' && scenario !== 'completed') && <span className="notification-dot" />}</Link></header>
       <main ref={main} tabIndex={-1} id="main-content">
         <Routes>
           <Route path="/" element={<HomePage scenario={scenario} />} />

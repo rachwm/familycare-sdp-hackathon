@@ -11,7 +11,7 @@ const options: { slug: string; title: string; description: string; icon: IconNam
 export function ProfilePage() {
   return <>
     <PageHeading title="Profile" subtitle="Manage your account and connected care." />
-    <section className="profile-card account-card"><Avatar person="account" /><div><span className="eyebrow">Account profile</span><h2>Nur Aisha</h2><p>Daughter · Family Member</p></div></section>
+    <section className="profile-card account-card"><Avatar person="account" /><div><span className="eyebrow">Account profile</span><h2>Sarah</h2><p>Daughter · Family Member</p></div></section>
     <Link className="profile-card linked-card" to="/resident"><Avatar /><div><span className="eyebrow">Linked resident</span><h2>Puan Aisha</h2><p className="connected"><span />Connected</p></div><Icon name="chevron" /></Link>
     <h2 className="settings-heading">Account settings</h2>
     <div className="settings-list">{options.map(option => <Link className="setting-row" key={option.slug} to={`/profile/${option.slug}`}><span className="activity-icon"><Icon name={option.icon} /></span><span><strong>{option.title}</strong><small>{option.description}</small></span><Icon name="chevron" /></Link>)}
