@@ -1,8 +1,8 @@
 # FamilyCare mobile dashboard
 
 React, TypeScript, Vite and React Router. The approved screenshots in
-`designs/family-dashboard/` are the visual references. All records are mock data;
-there is no backend connection or dispatch functionality.
+`designs/family-dashboard/` are the visual references. Demo Mode uses mock data;
+Live Mode reads fall incidents from the existing FastAPI endpoint.
 
 ## Run on your Mac
 
@@ -17,6 +17,31 @@ npm run dev
 Open the Local URL printed by Vite, usually http://localhost:5173.
 If you use pnpm, `pnpm install --frozen-lockfile` and `pnpm dev` also work.
 The included pnpm lockfile records the validated dependency versions.
+
+## Test Live Mode
+
+Start the FastAPI backend from the repository root in one terminal:
+
+```sh
+python3 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+In another terminal, run `npm run dev` from `frontend/`, open the Vite URL,
+scroll below the dashboard, and choose **Live Mode** under **Data mode**. Home,
+Alerts, History and Incident Details then read `GET /api/incidents` every three
+seconds. No incidents shows an empty message; if FastAPI stops, the page shows
+**Backend unavailable** and retains the last received incidents for reference.
+The Family pages show incidents for the linked `resident-01` record only.
+The Vite development server proxies `/api` to FastAPI, so the same Vite Network
+URL works on a phone on the same Wi-Fi. A production host must proxy `/api` to
+FastAPI or build with `VITE_API_BASE_URL` set to a browser-accessible backend
+origin with CORS configured. A remote browser cannot reach your Mac's
+`127.0.0.1` directly. The existing hosted demo has not been redeployed by this
+local change.
+
+Switch back to **Demo Mode** to use the nine original scenarios. Live Mode only
+shows incident fields and milestones actually recorded by the backend; it does
+not claim that a responder was assigned, arrived, or completed a visit.
 
 ## Open on your phone
 
@@ -63,9 +88,10 @@ Scroll below the page to **Demo scenarios** and select:
 8. Resident checked
 9. Visit completed
 
-The controls appear only in development. The scenario persists in this tab's
+The scenario selector appears only in development; the data mode selector is
+available in both development and production. Both persist in this tab's
 session storage, including when refreshing or navigating to a detail page.
-The production build starts in Normal monitoring and omits these controls.
+The production build starts in Demo Mode and omits the scenario selector.
 Changing the scenario on an incident page updates the displayed incident; selecting
 Normal returns Home. Scenarios change only when selected; there is no background
 clock or automatic escalation. Mock data never calls or dispatches anyone.
@@ -123,8 +149,8 @@ portrait assets when supplied. Logo and botanical accents are local SVG recreati
 DM Sans loads from Google Fonts with system fallbacks.
 
 The backend, models, Home Companion, sensor simulators and API contracts are
-unchanged. Authentication, account editing, live integrations and real responder
-dispatch remain outside this frontend milestone. The coordinator demo is described below.
+unchanged. Authentication, account editing and real responder dispatch remain
+outside this frontend milestone. The coordinator demo is described below.
 
 
 ## SDP Coordinator Dashboard

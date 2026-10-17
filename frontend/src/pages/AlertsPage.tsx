@@ -6,8 +6,12 @@ import { PageHeading } from '../components/PageHeading';
 import { Icon } from '../components/Icon';
 import type { Scenario } from '../data/mockData';
 import { getSafetyAlerts, safetyAlertFilters, type SafetyAlertFilter } from '../data/safetyAlerts';
+import { useLive } from '../data/liveContext';
+import { displayDate, toLiveActivity } from '../data/liveIncidents';
+import { LiveNotice } from '../components/LiveNotice';
 export function AlertsPage({ scenario }: { scenario: Scenario }) {
   const demo = useFamilyDemo();
+  const live = useLive();
   const config = familyConfig(scenario, demo);
   const [params, setParams] = useSearchParams();
   const filter = safetyAlertFilters.find(value => value === params.get('filter')) ?? 'All';
@@ -19,6 +23,18 @@ export function AlertsPage({ scenario }: { scenario: Scenario }) {
     { title: 'Active alerts', alerts: filtered.filter(alert => !alert.resolved) },
     { title: 'Resolved alerts', alerts: filtered.filter(alert => alert.resolved) },
   ];
+  if (live.mode === 'live') {
+    const filteredIncidents = filter === 'Unusual Activity' ? [] : live.incidents;
+    const active = filteredIncidents.filter(incident => incident.status !== 'resolved');
+    const resolved = filteredIncidents.filter(incident => incident.status === 'resolved');
+    return <><PageHeading title="Alerts" subtitle="Stay informed about important updates for your loved ones." />
+      <Filters options={safetyAlertFilters} selected={filter} onSelect={setFilter} label="Filter alerts" />
+      <div className="activity-list alerts-list" aria-live="polite"><LiveNotice empty={!live.incidents.length && !live.loading && !live.error} />
+        {filteredIncidents.length > 0 && !active.length && <p className="alerts-clear"><Icon name="check" />No active safety alerts</p>}
+        {[{ title: 'Active alerts', items: active }, { title: 'Resolved alerts', items: resolved }].map(group => group.items.length > 0 && <section className="alerts-group" key={group.title} aria-label={group.title}><h2>{group.title}</h2><div className="activity-list">{group.items.map(incident => <ActivityCard key={incident.event_id} activity={toLiveActivity(incident)} statusIcon={incident.status === 'resolved' ? 'check' : 'clock'} timeLabel={displayDate(incident.timestamp)} showDay={false} expanded />)}</div></section>)}
+        {!filteredIncidents.length && live.incidents.length > 0 && <div className="empty-state"><h2>No unusual activity alerts</h2><p>The live API currently provides fall incidents only.</p></div>}
+      </div></>;
+  }
   return <>
     <PageHeading title="Alerts" subtitle="Stay informed about important updates for your loved ones." />
     <Filters options={safetyAlertFilters} selected={filter} onSelect={setFilter} label="Filter alerts" />
