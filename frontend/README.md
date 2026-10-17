@@ -33,7 +33,7 @@ through the macOS firewall if prompted. Localhost on a phone points to the phone
   check-ins, medication reminders and connection updates remain in Home and History.
   Cards label the original time as Detected. Active and resolved incidents appear
   in separate sections; an incident is resolved when its visit is completed.
-- `/history`: Screen 24, with dated groups and All / Check-ins / Medication / Alerts filters.
+- `/history`: Screen 24, with dated groups and All / Check-ins / Medication filters.
 - `/profile`: Screen 25, with approved account and linked-resident cards.
 - `/incidents/:incidentId`: full incident, visit details or visit summary page.
 - `/activities/:activityId`: full details for recorded routine activities.
