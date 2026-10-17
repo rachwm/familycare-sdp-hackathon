@@ -260,3 +260,7 @@ main { position: relative; z-index: 1; padding: 0 16px; }
   a, button { transition: background-color .15s ease, box-shadow .15s ease; }
   .activity-card:hover, .setting-row[href]:hover { box-shadow: 0 3px 13px #0b6e4d14; }
 }
+
+.family-coordinator-note { max-width:430px; margin:16px auto; padding:16px; border-radius:12px; background:#dceee3; font-size:12px; }
+.family-coordinator-note p { margin:8px 0; }
+.family-coordinator-note a { text-decoration:underline; }

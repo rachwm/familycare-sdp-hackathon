@@ -1,12 +1,14 @@
+import { familyActivities, familyConfig, useFamilyDemo } from '../coordinator/familyBridge';
 import { Link } from 'react-router-dom';
 import { ActivityCard } from '../components/ActivityCard';
 import { Icon } from '../components/Icon';
 import { ResidentCard } from '../components/ResidentCard';
-import { getScenario, getTodayActivities, type Scenario } from '../data/mockData';
+import { type Scenario } from '../data/mockData';
 export function HomePage({ scenario }: { scenario: Scenario }) {
-  const state = getScenario(scenario);
+  const demo = useFamilyDemo();
+  const state = familyConfig(scenario, demo);
   // The reference shows the latest incident followed by the morning updates.
-  const activities = getTodayActivities(scenario).filter(activity => activity.id !== 'resident-check-in' && activity.id !== 'unusual-check-in');
+  const activities = familyActivities(scenario, demo).filter(activity => activity.id !== 'resident-check-in' && activity.id !== 'unusual-check-in');
   return <>
     <section className="greeting"><p>Good morning,</p><h1>Nur Aisha</h1><span>Stay connected with your loved ones.</span></section>
     <p className="sr-only" role="status">{state.status}. {state.description}</p>

@@ -78,7 +78,7 @@ events that have occurred at the selected stage:
 | 10:32 AM | Possible fall detected |
 | 10:32 AM | Resident check-in started |
 | 10:47 AM | Assistance requested |
-| 10:47 AM | Responder assigned |
+| 10:48 AM | Responder assigned |
 | 10:50 AM | Responder on the way |
 | 10:58 AM | Responder arrived |
 | 11:03 AM | Resident checked |
@@ -123,5 +123,134 @@ portrait assets when supplied. Logo and botanical accents are local SVG recreati
 DM Sans loads from Google Fonts with system fallbacks.
 
 The backend, models, Home Companion, sensor simulators and API contracts are
-unchanged. Authentication, account editing, live integrations and the responder
-dashboard remain outside this frontend milestone.
+unchanged. Authentication, account editing, live integrations and real responder
+dispatch remain outside this frontend milestone. The coordinator demo is described below.
+
+
+## SDP Coordinator Dashboard
+
+Open **http://127.0.0.1:5173/coordinator** after running `pnpm dev` from `frontend/`.
+The Family Dashboard stays at `/`; its development scenario controls still work.
+All data uses **16 October 2026** as the fixed demonstration date.
+
+### Navigation
+
+- `/coordinator`: emergency triage overview with shared summary counts. New
+  Assistance Requests opens Incidents / New Requests, Responders On Task opens
+  Responders / On Task, and Completed Today opens Reports / Today.
+- `/coordinator/incidents`: All, New Requests, In Progress and Resolved filters,
+  plus resident/location/incident search. Each row opens that incident's details.
+- `/coordinator/incidents/:id`: read-only resident information, confirmed timeline,
+  automatic matching, assignment review and exceptional coordinator actions.
+- `/coordinator/incidents/:id/track`: response milestones, simulated route, family
+  notification status and reassign/escalate controls. A journey is shown only
+  after acceptance and explicit departure. Direct links before departure explain
+  the pending state instead of showing a journey.
+- `/coordinator/responders`: All, Available, On Task and Unavailable filters,
+  search, availability/capability information and links to actual assignments.
+- `/coordinator/residents` and `/coordinator/residents/:id`: linked-resident
+  directory and read-only profiles with related incidents.
+- `/coordinator/reports` and `/coordinator/reports/:id`: submitted visit reports,
+  Today filter, search, documented outcomes and actual submission times.
+- `/coordinator/settings`: working notification-indicator and compact-directory
+  preferences, persisted in local browser storage when available.
+
+The collapsible sidebar highlights the current destination. Filters and search
+use URL queries and work with browser Back. Reference cases for Mr. Tan and
+Mdm. Lee have distinct incident URLs and read-only case details. Puan Mariam's
+fictional completed visit is an existing demo report; its record also contributes
+to Completed Today. The Aisha simulation contributes one incident record through
+all updates, never separate records per milestone. Normal monitoring removes all
+active incidents but retains the completed demonstration report.
+
+### Main demonstration flows
+
+1. Open the overview. A fresh coordinator load starts at Assistance requested,
+   **10:47 AM**. Automatic matching begins after 1.5 seconds and offers the best
+   eligible candidate after another 1.5 seconds. The timer continues across pages.
+2. Open **View Incident Details**. Daniel is assigned at **10:48 AM**, awaiting
+   acceptance. Before departure the map shows only the resident's mock location.
+3. Use **Simulate Daniel Lim Accepting** for **10:49 AM**, then **Confirm Demo
+   Departure** for **10:50 AM**. Track Incident now becomes available.
+4. Advance to arrival at **10:58 AM** and resident check at **11:03 AM**. Submit
+   Visit Report & Resolve records completion and Nur Aisha's mock outcome update
+   at **11:20 AM**. The report and Completed Today counter update together.
+5. Instead of accepting Daniel, simulate his decline. His offer stays in the audit
+   history. Matching offers **Mei Chen**, the next eligible available candidate.
+   She must separately accept and confirm departure; the old route is not reused
+   as her confirmed journey. Replacement timings never move backwards.
+6. Test **Reassign Responder** and **Escalate Incident** separately. Each opens a
+   confirmation dialog; Cancel/Escape leaves state unchanged. Confirm shows an
+   updating state and success feedback. Reassignment releases the current offer
+   and tries the next eligible responder. Escalation records urgent supervisor
+   support review and pauses routine progression without completing a report.
+7. To test unavailable candidates, choose Possible fall detected, open Responders,
+   and turn off Available in demo for Daniel and Mei. Advance to Assistance
+   requested and wait for matching. The overview shows **Coordinator Action
+   Required**. Review availability or escalate; no replacement is fabricated.
+   Changing availability can allow waiting matching to resume.
+
+Matching filters by configured service area, availability, suitable capability,
+current assignments and exclusions, then ranks by deterministic simulated travel
+minutes. A decline/release excludes that responder from the current attempt.
+The demo exposes availability controls for eligible unassigned mock responders;
+these are demonstration switches, not a live operational availability service.
+Reset demo clears exclusions and availability switches.
+
+The central state is owned by `App.tsx`. Pure transitions live in
+`src/coordinator/demo.ts`; `records.ts` derives incident directories, responder
+assignments, reports, filters and all summary counts. `familyBridge.tsx` supplies
+that same coordinator record to the Family Dashboard without changing legacy
+family scenario behavior. Family status, activity history, alert description and
+incident timeline use the current responder, including replacements.
+State is maintained across in-app navigation; reloading starts a fresh demo.
+Preferences persist locally; separate tabs/users are not synchronized.
+
+### Verification and integration
+
+Run `pnpm test` and `pnpm build` from `frontend/`. Focused tests cover distinct
+navigation destinations, filters/search, per-record URLs, counters, assignment
+ranking, backup matching, unavailable candidates, audit history, chronology,
+tracking gates, report submission and existing Family Dashboard scenarios.
+
+All maps, distances, ETAs, assignments, visit outcomes and notification statuses
+are mock-only. Only the approved portrait region is displayed from the responder
+reference image. No live GPS, verified clinical assessment, real notification
+receipt or external emergency-service integration is claimed.
+
+Remaining dependencies are an agreed FastAPI incident/responder contract,
+authentication and coordinator role checks, live responder availability and
+milestone signals, stored visit reports, notification acknowledgements and
+verified map/ETA data. No backend endpoints have been invented, and Python,
+ML, sensor processing and Home Companion implementation remain unchanged.
+
+### Files in this refinement
+
+Coordinator interface and shared records:
+
+- `src/coordinator/Coordinator.tsx`
+- `src/coordinator/CoordinatorParts.tsx`
+- `src/coordinator/DirectoryPages.tsx`
+- `src/coordinator/coordinator.css`
+- `src/coordinator/demo.ts`
+- `src/coordinator/records.ts`
+- `src/coordinator/familyBridge.tsx`
+
+Routing and optional shared-state integration for the existing family screens:
+
+- `src/App.tsx`
+- `src/components/ResidentCard.tsx`
+- `src/pages/HomePage.tsx`
+- `src/pages/AlertsPage.tsx`
+- `src/pages/HistoryPage.tsx`
+- `src/pages/IncidentPage.tsx`
+
+Tests and documentation:
+
+- `tests/coordinator.test.ts`
+- `tests/coordinator-navigation.test.ts`
+- `README.md`
+
+Earlier uncommitted coordinator-milestone changes to the test command, shared
+assignment timestamp, base styles and legacy scenario timestamp test are retained.
+No additional dependencies were introduced by this refinement.

@@ -15,7 +15,7 @@ test('each fall scenario contains only the chronological prefix that has occurre
 test('the possible-fall demonstration uses the requested times and event order', () => {
   assert.deepEqual(fallEvents.map(({ title, time }) => [title, time]), [
     ['Possible fall detected', '10:32 AM'], ['Resident check-in started', '10:32 AM'],
-    ['Assistance requested', '10:47 AM'], ['Responder assigned', '10:47 AM'],
+    ['Assistance requested', '10:47 AM'], ['Responder assigned', '10:48 AM'],
     ['Responder on the way', '10:50 AM'], ['Responder arrived', '10:58 AM'],
     ['Resident checked', '11:03 AM'], ['Visit completed', '11:20 AM'],
   ]);

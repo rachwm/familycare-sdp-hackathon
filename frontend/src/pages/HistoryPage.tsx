@@ -1,16 +1,18 @@
+import { familyActivities, useFamilyDemo } from '../coordinator/familyBridge';
 import { useSearchParams } from 'react-router-dom';
 import { ActivityCard } from '../components/ActivityCard';
 import { Filters } from '../components/Filters';
 import { PageHeading } from '../components/PageHeading';
-import { getTodayActivities, yesterdayActivities, type Activity, type Scenario } from '../data/mockData';
+import { yesterdayActivities, type Activity, type Scenario } from '../data/mockData';
 const filters = ['All', 'Check-ins', 'Medication'] as const;
 export function HistoryPage({ scenario }: { scenario: Scenario }) {
+  const demo = useFamilyDemo();
   const [params, setParams] = useSearchParams();
   const filter = filters.find(value => value === params.get('filter')) ?? 'All';
   const setFilter = (value: typeof filters[number]) => setParams(value === 'All' ? {} : { filter: value }, { replace: true });
   const matches = (activity: Activity) => filter === 'All' || (filter === 'Check-ins' && activity.category === 'check-in') || (filter === 'Medication' && activity.category === 'medication');
   const groups = [
-    { label: 'Today, 16 Oct 2026', activities: getTodayActivities(scenario).filter(matches) },
+    { label: 'Today, 16 Oct 2026', activities: familyActivities(scenario, demo).filter(matches) },
     { label: 'Yesterday, 15 Oct 2026', activities: yesterdayActivities.filter(matches) },
   ];
   return <>

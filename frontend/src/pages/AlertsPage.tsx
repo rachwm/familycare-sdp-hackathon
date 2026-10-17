@@ -1,3 +1,4 @@
+import { familyConfig, useFamilyDemo } from '../coordinator/familyBridge';
 import { useSearchParams } from 'react-router-dom';
 import { ActivityCard } from '../components/ActivityCard';
 import { Filters } from '../components/Filters';
@@ -6,11 +7,14 @@ import { Icon } from '../components/Icon';
 import type { Scenario } from '../data/mockData';
 import { getSafetyAlerts, safetyAlertFilters, type SafetyAlertFilter } from '../data/safetyAlerts';
 export function AlertsPage({ scenario }: { scenario: Scenario }) {
+  const demo = useFamilyDemo();
+  const config = familyConfig(scenario, demo);
   const [params, setParams] = useSearchParams();
   const filter = safetyAlertFilters.find(value => value === params.get('filter')) ?? 'All';
   const setFilter = (value: SafetyAlertFilter) => setParams(value === 'All' ? {} : { filter: value }, { replace: true });
-  const alerts = getSafetyAlerts(scenario);
-  const filtered = getSafetyAlerts(scenario, filter);
+  const adapt = (alert: ReturnType<typeof getSafetyAlerts>[number]) => demo ? {...alert, description: config.description, status: config.status} : alert;
+  const alerts = getSafetyAlerts(scenario).map(adapt);
+  const filtered = getSafetyAlerts(scenario, filter).map(adapt);
   const groups = [
     { title: 'Active alerts', alerts: filtered.filter(alert => !alert.resolved) },
     { title: 'Resolved alerts', alerts: filtered.filter(alert => alert.resolved) },

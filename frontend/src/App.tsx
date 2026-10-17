@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { FamilyDemoContext } from './coordinator/familyBridge';
+import { Coordinator } from './coordinator/Coordinator';
+import { createDemo, eligibleCandidate, familyScenario, transition, type Action, type Stage } from './coordinator/demo';
 import { Botanical } from './components/Botanical';
 import { BottomNav } from './components/BottomNav';
 import { Brand } from './components/Brand';
@@ -20,7 +23,17 @@ function initialScenario(): Scenario {
   } catch { return 'normal'; }
 }
 export default function App() {
-  const [scenario, setScenario] = useState<Scenario>(initialScenario);
+  const [demo, setDemo] = useState(() => createDemo(window.location.pathname.startsWith('/coordinator') ? 'requested' : initialScenario() === 'unusual' ? 'normal' : initialScenario() as Stage, window.location.pathname.startsWith('/coordinator') ? 'coordinator' : 'family'));
+  const [unusual, setUnusual] = useState(initialScenario() === 'unusual' && !window.location.pathname.startsWith('/coordinator'));
+  const scenario: Scenario = unusual ? 'unusual' : familyScenario(demo);
+  const dispatch = useCallback((action: Action) => { setUnusual(false); setDemo(current => ({ ...transition(current, action), source: 'coordinator' })); }, []);
+  useEffect(() => {
+    if (demo.source !== 'coordinator' || demo.escalated || unusual) return;
+    const matching = demo.stage === 'matching' && eligibleCandidate(demo);
+    if (demo.stage !== 'requested' && !matching) return;
+    const timer = window.setTimeout(() => dispatch({ type: demo.stage === 'requested' ? 'start-matching' : 'auto-assign' }), 1500);
+    return () => window.clearTimeout(timer);
+  }, [demo, unusual, dispatch]);
   const location = useLocation();
   const navigate = useNavigate();
   const main = useRef<HTMLElement>(null);
@@ -29,14 +42,16 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     main.current?.focus({ preventScroll: true });
-    document.title = `FamilyCare | ${location.pathname === '/' ? 'Home' : location.pathname.split('/')[1].replace(/^./, c => c.toUpperCase())}`;
+    if (!location.pathname.startsWith('/coordinator')) document.title = `FamilyCare | ${location.pathname === '/' ? 'Home' : location.pathname.split('/')[1].replace(/^./, c => c.toUpperCase())}`;
   }, [location.pathname]);
   function changeScenario(value: Scenario) {
-    setScenario(value);
+    setUnusual(value === 'unusual');
+    setDemo(createDemo(value === 'unusual' ? 'normal' : value as Stage, 'family'));
     try { sessionStorage.setItem(STORAGE_KEY, value); } catch { /* Storage can be unavailable in private browsing. */ }
     if (location.pathname.startsWith('/incidents/')) navigate(value === 'normal' ? '/' : incidentPath(value));
   }
-  return <>
+  if (location.pathname.startsWith('/coordinator')) return <Routes><Route path='/coordinator/*' element={<Coordinator state={demo} dispatch={dispatch} />} /></Routes>;
+  return <FamilyDemoContext.Provider value={!unusual && demo.source === 'coordinator' ? demo : undefined}>
     <div className={`app-shell${detail ? ' app-shell--detail' : ''}`}>
       <Botanical position="top" />
       {!detail && <header className="app-header"><Link to="/" aria-label="FamilyCare home"><Brand /></Link><Link className="icon-button notification-button" to="/alerts" aria-label="View alerts"><Icon name="bell" />{scenario !== 'normal' && scenario !== 'completed' && <span className="notification-dot" />}</Link></header>}
@@ -47,7 +62,7 @@ export default function App() {
           <Route path="/history" element={<HistoryPage scenario={scenario} />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:section" element={<SettingsPage />} />
-          <Route path="/incidents/:incidentId" element={<IncidentPage scenario={scenario} />} />
+          <Route path="/incidents/:incidentId" element={<IncidentPage scenario={scenario} sharedDemo={!unusual && demo.source === 'coordinator' ? demo : undefined} />} />
           <Route path="/activities/:activityId" element={<ActivityPage scenario={scenario} />} />
           <Route path="/resident" element={<ResidentPage scenario={scenario} />} />
           <Route path="*" element={<NotFoundPage />} />
@@ -56,6 +71,7 @@ export default function App() {
       <div className="garden"><Botanical position="bottom" /></div>
       <BottomNav />
     </div>
-    {import.meta.env.DEV && <aside className="demo-controls" aria-label="Development scenario controls"><label htmlFor="demo-scenario">Demo scenarios</label><select id="demo-scenario" value={scenario} onChange={event => changeScenario(event.target.value as Scenario)}>{scenarios.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select><p>16 October 2026 · Mock data only</p><span className="sr-only" role="status">Selected scenario: {state.label}</span></aside>}
-  </>;
+    {!unusual && demo.source === 'coordinator' && <aside className='family-coordinator-note' role='status'><strong>Shared coordinator demo</strong><p>{demo.escalated ? 'Incident escalated · support review pending' : demo.stage === 'matching' && !eligibleCandidate(demo) ? 'No suitable responder · coordinator action required' : demo.events.at(-1)?.title ?? 'Normal monitoring'}</p><Link to='/coordinator'>Open Response Centre →</Link></aside>}
+    {import.meta.env.DEV && <aside className="demo-controls" aria-label="Development scenario controls"><label htmlFor="demo-scenario">Demo scenarios</label><select id="demo-scenario" value={scenario} onChange={event => changeScenario(event.target.value as Scenario)}>{scenarios.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select><p>16 October 2026 · Mock data only</p><Link to="/coordinator">Open SDP Response Centre →</Link><span className="sr-only" role="status">Selected scenario: {state.label}</span></aside>}
+  </FamilyDemoContext.Provider>;
 }

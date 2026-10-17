@@ -1,9 +1,10 @@
+import { familyConfig, useFamilyDemo } from '../coordinator/familyBridge';
 import { Link } from 'react-router-dom';
-import { getScenario, incidentPath, type Scenario } from '../data/mockData';
+import { incidentPath, type Scenario } from '../data/mockData';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 export function ResidentCard({ scenario, detail = false }: { scenario: Scenario; detail?: boolean }) {
-  const state = getScenario(scenario);
+  const state = familyConfig(scenario, useFamilyDemo());
   const normal = scenario === 'normal';
   const path = normal ? '/resident' : incidentPath(scenario);
   const content = <>
