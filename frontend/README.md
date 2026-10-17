@@ -28,7 +28,11 @@ through the macOS firewall if prompted. Localhost on a phone points to the phone
 ## Pages and navigation
 
 - `/`: Screen 06's normal homepage, with incident variants using the selected state.
-- `/alerts`: Screen 23, with All / Unusual Activity / Updates filters.
+- `/alerts`: safety incidents only, with All / Falls / Unusual Activity filters.
+  Each incident has one card that updates as its response progresses. Routine
+  check-ins, medication reminders and connection updates remain in Home and History.
+  Cards label the original time as Detected. Active and resolved incidents appear
+  in separate sections; an incident is resolved when its visit is completed.
 - `/history`: Screen 24, with dated groups and All / Check-ins / Medication / Alerts filters.
 - `/profile`: Screen 25, with approved account and linked-resident cards.
 - `/incidents/:incidentId`: full incident, visit details or visit summary page.
