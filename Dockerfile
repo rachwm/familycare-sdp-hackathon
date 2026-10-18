@@ -4,6 +4,9 @@ WORKDIR /build/frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN npm install --global pnpm@10.15.1 && pnpm install --frozen-lockfile
 COPY frontend/ ./
+# Vite imports design reference assets from outside frontend/src.
+# Preserve the repository-relative path for CoordinatorParts.tsx.
+COPY designs/ /build/designs/
 RUN pnpm build
 
 FROM python:3.11-slim AS app
