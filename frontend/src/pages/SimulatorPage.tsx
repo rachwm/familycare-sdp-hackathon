@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './SimulatorPage.css';
 import { createFallSimulation } from './fallApi';
+import { createMedicationReminder } from './reminderApi';
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}simulator/${name}`;
 
@@ -9,7 +10,7 @@ const scenarios = [
   { id: 'fall', title: 'Fall detection', description: 'Start the 30-second safety check-in.', icon: 'fall.svg', prompt: '', actions: [] },
   { id: 'inactivity', title: 'Inactivity', description: 'Check in when morning activity is missing.', icon: 'inactivity.svg', prompt: 'Puan Aisha, we have not noticed your usual morning activity. Are you okay?', actions: ['I’m okay', 'I need help'] },
   { id: 'utility', title: 'Utility anomaly', description: 'Test an unusual electricity or water pattern.', icon: 'utility.svg', prompt: 'Sample alert: water use is higher than the usual pattern. This is simulated data.', actions: ['Acknowledge alert'] },
-  { id: 'medication', title: 'Medication reminder', description: 'Test acknowledgement, snooze or assistance.', icon: 'medication.svg', prompt: 'This is a practice medication reminder. Please choose a response.', actions: ['Acknowledge reminder', 'Snooze reminder', 'I need help'] },
+  { id: 'medication', title: 'Medication reminder', description: 'Create and display a saved medication reminder.', icon: 'medication.svg', prompt: 'This is a practice medication reminder. Please choose a response.', actions: ['Acknowledge reminder', 'Snooze reminder', 'I need help'] },
   { id: 'connection', title: 'Connection error', description: 'Test a failed response and retry.', icon: 'connection.svg', prompt: 'Practice error: the response could not be sent. Try again.', actions: ['Retry'] },
 ] as const;
 
@@ -20,6 +21,7 @@ export function SimulatorPage() {
   const [selected, setSelected] = useState<Scenario | null>(null);
   const [result, setResult] = useState('');
   const [starting, setStarting] = useState(false);
+  const [startingScenario, setStartingScenario] = useState<string | null>(null);
   const [apiError, setApiError] = useState('');
   const busyRef = useRef(false);
   const mountedRef = useRef(true);
@@ -37,18 +39,24 @@ export function SimulatorPage() {
   async function runScenario(scenario: Scenario) {
     if (busyRef.current) return;
     setApiError('');
-    if (scenario.id === 'fall') {
+    if (scenario.id === 'fall' || scenario.id === 'medication') {
       busyRef.current = true;
       setStarting(true);
+      setStartingScenario(scenario.id);
       setSelected(null);
       try {
-        const event = await createFallSimulation();
-        if (mountedRef.current) navigate(`/companion?eventId=${encodeURIComponent(event.event_id)}`);
+        if (scenario.id === 'fall') {
+          const event = await createFallSimulation();
+          if (mountedRef.current) navigate(`/companion?eventId=${encodeURIComponent(event.event_id)}`);
+        } else {
+          const reminder = await createMedicationReminder();
+          if (mountedRef.current) navigate(`/companion?reminderId=${encodeURIComponent(reminder.id)}`);
+        }
       } catch (error) {
-        if (mountedRef.current) setApiError(error instanceof Error ? error.message : 'Could not start the fall simulation.');
+        if (mountedRef.current) setApiError(error instanceof Error ? error.message : 'Could not start the simulation.');
       } finally {
         busyRef.current = false;
-        if (mountedRef.current) setStarting(false);
+        if (mountedRef.current) { setStarting(false); setStartingScenario(null); }
       }
       return;
     }
@@ -103,7 +111,7 @@ export function SimulatorPage() {
           </div>
 
           <section className="simulator-panel" aria-label="Simulation controls" aria-busy={starting}>
-            <p className="simulator-notice">SIMULATION ONLY · Fall checks are saved to the local backend</p>
+            <p className="simulator-notice">SIMULATION ONLY · Fall events and reminders are saved to the local backend</p>
             {apiError && <p role="alert">{apiError} Please check that the backend is running before trying again.</p>}
             <ul className="simulator-scenarios">
               {scenarios.map(scenario => (
@@ -116,7 +124,7 @@ export function SimulatorPage() {
                     <p>{scenario.description}</p>
                   </div>
                   <button className="simulator-run" type="button" disabled={starting} onClick={() => { void runScenario(scenario); }} aria-label={`Run ${scenario.title.toLowerCase()} simulation`}>
-                    {starting && scenario.id === 'fall' ? 'Starting…' : 'Run simulation'}
+                    {starting && scenario.id === startingScenario ? 'Starting…' : 'Run simulation'}
                   </button>
                 </li>
               ))}
@@ -137,7 +145,7 @@ export function SimulatorPage() {
             </section>
           )}
 
-          <p className="simulator-footer-note">Fall check-ins: connected backend · Other scenarios: local practice previews.</p>
+          <p className="simulator-footer-note">Fall check-ins and reminder display: connected backend · Reminder responses and other scenarios: local previews.</p>
         </main>
       </div>
     </div>

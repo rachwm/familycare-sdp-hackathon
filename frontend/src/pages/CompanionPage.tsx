@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Brand } from '../components/Brand';
+import { MedicationCompanion } from './MedicationCompanion';
 import { getFallIncident, submitFallResponse, type FallIncident, type ResidentResponse } from './fallApi';
 import './CompanionPage.css';
 
@@ -21,6 +22,11 @@ function recordedMessage(event: FallIncident): string {
 
 export function CompanionPage() {
   const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const reminderId = params.get('reminderId');
+  if (reminderId && !params.get('eventId') && params.get('demo') !== 'fall') {
+    return <MedicationCompanion key={search} reminderId={reminderId} />;
+  }
   // A new incident starts a fresh session, even when only the URL query changes.
   return <CompanionSession key={search} search={search} />;
 }

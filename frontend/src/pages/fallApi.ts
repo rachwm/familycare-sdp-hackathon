@@ -40,7 +40,7 @@ function readIncident(value: unknown): FallIncident {
   return value as unknown as FallIncident;
 }
 
-async function request(path: string, body?: unknown, signal?: AbortSignal): Promise<unknown> {
+export async function request(path: string, body?: unknown, signal?: AbortSignal): Promise<unknown> {
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal?.aborted) controller.abort();
