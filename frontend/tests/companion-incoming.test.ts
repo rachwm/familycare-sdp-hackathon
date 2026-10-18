@@ -24,3 +24,15 @@ test('fallback chooses latest awaiting check-in and ignores resolved or unrelate
   assert.equal(latestPendingCompanionIncidentId([]), null);
   assert.equal(latestPendingCompanionIncidentId({ bad: true }), null);
 });
+
+test('newly created fall alerts are accepted while stale pending data is ignored', () => {
+  const now = Date.parse('2026-10-18T16:01:00+08:00');
+  const fall = { ...pending, event_id: 'fall-new', event_type: 'possible_fall' };
+  assert.equal(incomingCompanionIncidentId({ type: 'INCIDENT_CREATED', data: fall }), 'fall-new');
+  assert.equal(latestPendingCompanionIncidentId([pending], now - 120_000), pending.event_id);
+  assert.equal(latestPendingCompanionIncidentId([pending], now + 1_000), null);
+  assert.equal(latestPendingCompanionIncidentId([
+    { ...pending, event_id: 'stale', timestamp: '2026-10-17T16:00:00+08:00' },
+    fall,
+  ], now - 120_000), 'fall-new');
+});
