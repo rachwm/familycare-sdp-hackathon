@@ -36,7 +36,7 @@ export function CompanionPage() {
     if (reminderId || eventId) return;
     try {
       const incidents = await request('/api/incidents');
-      const id = latestPendingCompanionIncidentId(incidents);
+      const id = latestPendingCompanionIncidentId(incidents, Date.now() - 2 * 60_000);
       if (id) navigateToIncident(id);
     } catch {
       // The WebSocket remains active; retry on the next poll.
