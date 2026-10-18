@@ -52,8 +52,20 @@ export function incidentLabel(incident: LiveIncident) {
 export function incidentTone(incident: LiveIncident): Tone {
   return incident.status === 'resolved' ? 'green' : incident.status === 'awaiting_resident_response' ? 'orange' : 'red';
 }
+/** Format optional report fields safely: older records may omit resident_condition. */
+export function formatResidentCondition(value: unknown): string {
+  return typeof value === 'string' && value.trim()
+    ? value.replace(/_/g, ' ')
+    : 'Not recorded';
+}
 export function incidentDescription(incident: LiveIncident) {
-  if (incident.visit_report) return `${incident.responder_name ?? 'Responder'} reported: ${incident.visit_report.resident_condition.replace(/_/g, ' ')}. ${incident.visit_report.summary} ${incident.visit_report.action_taken}`;
+  if (incident.visit_report) {
+    const report = incident.visit_report;
+    const condition = formatResidentCondition(report.resident_condition);
+    const summary = typeof report.summary === 'string' ? report.summary : 'No summary recorded.';
+    const action = typeof report.action_taken === 'string' ? report.action_taken : 'No action recorded.';
+    return `${incident.responder_name ?? 'Responder'} reported: ${condition}. ${summary} ${action}`;
+  }
   if (incident.status === 'resolved') return incident.resident_response === 'resident_okay'
     ? 'Puan Aisha confirmed she is okay.' : 'The incident has been resolved.';
   if (incident.status === 'resident_needs_help') return 'Puan Aisha requested help.';

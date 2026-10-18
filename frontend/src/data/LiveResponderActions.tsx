@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { resolveFollowUpIncident, sendResponderCommand, type LiveIncident, type ResponderCommand } from './liveIncidents';
+import { formatResidentCondition, resolveFollowUpIncident, sendResponderCommand, type LiveIncident, type ResponderCommand } from './liveIncidents';
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 export function LiveResponderActions({ incident, responder, refresh }: { incident: LiveIncident; responder: boolean; refresh: () => void }) {
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
@@ -24,7 +24,7 @@ export function LiveResponderActions({ incident, responder, refresh }: { inciden
   return <>
     <p>{incident.responder_name ? `Assigned responder: ${incident.responder_name}` : 'No confirmed responder assignment'}</p>
     {error && <p role="alert">{error}</p>}
-    {incident.visit_report ? <section aria-label="Completed visit report"><h3>Visit report submitted</h3><p>Resident condition: {incident.visit_report.resident_condition.replace(/_/g, ' ')}</p><p>{incident.visit_report.summary}</p><p>{incident.visit_report.action_taken}</p><p>{incident.status === 'resolved' ? 'Visit completed · incident resolved' : 'Coordinator follow-up required · incident remains open'}</p>{!responder && incident.status !== 'resolved' && <button className={button} disabled={busy} type="button" onClick={() => { void resolveFollowUp(); }}>Resolve After Follow-up</button>}</section> : incident.status !== 'resolved' && <>
+    {incident.visit_report ? <section aria-label="Completed visit report"><h3>Visit report submitted</h3><p>Resident condition: {formatResidentCondition(incident.visit_report.resident_condition)}</p><p>{incident.visit_report.summary || 'No summary recorded.'}</p><p>{incident.visit_report.action_taken || 'No action recorded.'}</p><p>{incident.status === 'resolved' ? 'Visit completed · incident resolved' : 'Coordinator follow-up required · incident remains open'}</p>{!responder && incident.status !== 'resolved' && <button className={button} disabled={busy} type="button" onClick={() => { void resolveFollowUp(); }}>Resolve After Follow-up</button>}</section> : incident.status !== 'resolved' && <>
       {!responder && incident.requires_responder && !incident.responder_id && <button className={button} disabled={busy} onClick={() => submit({ endpoint: 'assign-responder', payload: { responder_id: 'daniel', responder_name: 'Daniel Lim', responder_phone: '' } })}>Assign Daniel Lim</button>}
       {responder && incident.responder_id === 'daniel' && incident.responder_name === 'Daniel Lim' && <>
         {action && <button className={button} disabled={busy} onClick={() => submit({ endpoint: 'responder-status', payload: { responder_status: action[1] } })}>{action[0]}</button>}
