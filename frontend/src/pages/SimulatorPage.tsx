@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './SimulatorPage.css';
-import { createFallSimulation } from './fallApi';
+import { createFallSimulation, request } from './fallApi';
+import { useBackendEvents } from '../data/backendEvents';
+import { incomingCompanionIncidentId, latestPendingCompanionIncidentId } from './companionIncoming';
 import { createMedicationReminder } from './reminderApi';
 import { createActivityAnomalySimulation } from './activityApi';
 import { resetDemoData } from './simulatorApi';
@@ -36,6 +38,47 @@ export function SimulatorPage() {
     return () => { mountedRef.current = false; };
   }, []);
   const previewHeading = useRef<HTMLHeadingElement>(null);
+
+  // The Home Companion menu stays ready for sensor alerts and scheduled check-ins.
+  // Do not interrupt a simulation already being started by the resident.
+  useBackendEvents(event => {
+    if (busyRef.current || resetting) return;
+    const incidentId = incomingCompanionIncidentId(event);
+    if (incidentId) {
+      navigate(`/companion?eventId=${encodeURIComponent(incidentId)}`);
+      return;
+    }
+    if (event.type === 'ROUTINE_REMINDER' && typeof event.data === 'object' && event.data !== null) {
+      const reminderId = (event.data as Record<string, unknown>).id;
+      if (typeof reminderId === 'string' && reminderId) {
+        navigate(`/companion?reminderId=${encodeURIComponent(reminderId)}`);
+      }
+    }
+  }, !starting && !resetting);
+
+  // Recover recently created alerts if a WebSocket notification was missed.
+  useEffect(() => {
+    if (starting || resetting) return;
+    let active = true;
+    let reading = false;
+    const checkPending = async () => {
+      if (reading || busyRef.current) return;
+      reading = true;
+      try {
+        const incidents = await request('/api/incidents');
+        if (!active || busyRef.current) return;
+        const id = latestPendingCompanionIncidentId(incidents, Date.now() - 2 * 60_000);
+        if (id) navigate(`/companion?eventId=${encodeURIComponent(id)}`);
+      } catch {
+        // Retry silently: simulation controls keep their own error handling.
+      } finally {
+        reading = false;
+      }
+    };
+    void checkPending();
+    const timer = window.setInterval(() => { void checkPending(); }, 3000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [navigate, starting, resetting]);
 
   useEffect(() => {
     if (selected) previewHeading.current?.focus();
@@ -123,7 +166,7 @@ export function SimulatorPage() {
           <strong>FamilyCare</strong>
           <span>A Safer Home. A More Connected Tomorrow.</span>
         </div>
-        <Link className="simulator-alert-link" to="/alerts" aria-label="View family alerts">
+        <Link className="simulator-alert-link" to="/simulator" aria-label="Home Companion menu">
           <img src={asset('bell.svg')} width="34" height="34" alt="" />
         </Link>
       </header>
@@ -131,7 +174,7 @@ export function SimulatorPage() {
       <div className="simulator-workspace">
         <nav className="simulator-sidebar" aria-label="FamilyCare navigation">
           <img className="simulator-botanical-sidebar" src={asset('botanical-sidebar.png')} alt="" />
-          <Link className="simulator-nav-link simulator-nav-link--home" to="/">
+          <Link className="simulator-nav-link simulator-nav-link--home" to="/simulator">
             <img src={asset('home.svg')} width="40" height="40" alt="" />Home
           </Link>
           <Link className="simulator-nav-link" to="/history">
