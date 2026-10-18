@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isLiveIncident, incidentDescription, resolveFollowUpIncident, sendResponderCommand, type LiveIncident } from '../src/data/liveIncidents.ts';
+import { formatResidentCondition, isLiveIncident, incidentDescription, resolveFollowUpIncident, sendResponderCommand, type LiveIncident } from '../src/data/liveIncidents.ts';
 const event: LiveIncident = {event_id:'actual-id',event_type:'possible_fall',resident_id:'resident-01',location:'living_room',severity:'critical',status:'no_response',timestamp:'2026-10-18T10:00:00+08:00',resident_response:'timeout',response_timestamp:null,requires_responder:true,responder_status:'assigned',responder_request_timestamp:null,resolution_timestamp:null,simulation:true,responder_id:'daniel',responder_name:'Daniel Lim'};
 test('responder POST uses canonical route and actual payload; confirmed assignment validates',async()=>{
  let url='',body='',method='';
@@ -28,4 +28,16 @@ test('coordinator can explicitly resolve an incident after a follow-up report',a
  assert.equal((await resolveFollowUpIncident('actual-id','https://api.example/',request)).status,'resolved');
  assert.equal(url,'https://api.example/api/incidents/actual-id/actions');
  assert.deepEqual(JSON.parse(body),{action:'resolve'});
+});
+
+test('legacy visit reports without resident condition do not crash live dashboards', () => {
+  assert.equal(formatResidentCondition(undefined), 'Not recorded');
+  assert.equal(formatResidentCondition(null), 'Not recorded');
+  assert.equal(formatResidentCondition('needs_further_assistance'), 'needs further assistance');
+  const olderIncident = {
+    ...event,
+    visit_report: { summary: 'Resident was checked.', action_taken: 'Follow-up scheduled.', submitted_at: event.timestamp },
+  } as unknown as LiveIncident;
+  assert.match(incidentDescription(olderIncident), /Not recorded/);
+  assert.match(incidentDescription(olderIncident), /Resident was checked/);
 });
