@@ -5,6 +5,7 @@ services:
     name: familycare-sdp-hackathon
     runtime: docker
     plan: free
+    region: singapore
     branch: integration/full-prototype-test
     dockerfilePath: ./Dockerfile
     dockerContext: .
