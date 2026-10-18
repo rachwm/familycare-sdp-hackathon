@@ -41,23 +41,12 @@ function readActivityResult(value: unknown): ActivityAnomalyResult {
 }
 
 export async function createActivityAnomalySimulation(): Promise<ActivityAnomalyResult> {
-  // One activity-anomaly scenario combines the utility, contact-sensor and
-  // inactivity evidence used by Member 2's model.
-  const payload = {
-    timestamp: new Date().toISOString(),
-    power_kw: 0.1,
-    water_lpm: 0,
-    inactivity_mins: 180,
-    door_transitions_15m: 0,
-    resident_state: 'HOME',
-    resident_id: 'resident-01',
-    location: 'living_room',
-    simulation: true,
-  };
-
-  const result = readActivityResult(await request('/utility-anomaly', payload));
+  // Deterministic demo injection: records an inactivity alert in the same
+  // backend incident store used by Home Companion, Family and Coordinator.
+  // Genuine sensor inference remains available through POST /utility-anomaly.
+  const result = readActivityResult(await request('/api/simulator/activity', {}));
   if (!result.is_anomaly) {
-    throw new FallApiError('The backend processed the sample but did not classify it as an anomaly.');
+    throw new FallApiError('The simulator did not create a confirmed activity anomaly.');
   }
   return result;
 }
