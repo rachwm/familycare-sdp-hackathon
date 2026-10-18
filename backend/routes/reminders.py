@@ -13,9 +13,7 @@ from backend.models.events import Reminder
 router = APIRouter()
 
 REMINDER_STORE = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "runtime"
+    Path(os.getenv("FAMILYCARE_DATA_DIR", str(Path(__file__).resolve().parents[2] / "data" / "runtime")))
     / "reminders.json"
 )
 
