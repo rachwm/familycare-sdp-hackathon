@@ -41,18 +41,29 @@ export function useBackendEvents(
 
     const connect = () => {
       if (!active) return;
-      socket = new WebSocket(websocketUrl());
-      socket.onmessage = message => {
-        try {
-          const event: unknown = JSON.parse(String(message.data));
-          if (isBackendEvent(event)) callback.current(event);
-        } catch {
-          // Ignore malformed messages and keep the live connection running.
-        }
-      };
-      socket.onclose = () => {
+      try {
+        // A malformed URL, blocked mixed-content socket, or unsupported
+        // WebSocket environment must never crash Live Mode.
+        socket = new WebSocket(websocketUrl());
+        socket.onmessage = message => {
+          try {
+            const event: unknown = JSON.parse(String(message.data));
+            if (isBackendEvent(event)) callback.current(event);
+          } catch {
+            // Ignore malformed messages and keep the live connection running.
+          }
+        };
+        socket.onerror = () => {
+          // A dropped socket reconnects via onclose. HTTP polling still works.
+          socket?.close();
+        };
+        socket.onclose = () => {
+          if (active) reconnectTimer = window.setTimeout(connect, 3000);
+        };
+      } catch (error) {
+        console.warn('FamilyCare live WebSocket unavailable; using HTTP polling.', error);
         if (active) reconnectTimer = window.setTimeout(connect, 3000);
-      };
+      }
     };
 
     connect();
