@@ -1,3 +1,4 @@
+import { DashboardModeControl, LiveIncidentPanel, useDashboardData } from '../data/DashboardData';
 import { useEffect, useRef, useState, type Dispatch, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../components/Brand';
@@ -16,6 +17,7 @@ const progress = [
   { stage: 'arrived', label: 'Arrived', time: '10:58 AM', icon: 'home' },
 ] as const;
 export function ResponderPage({ state, dispatch, showFamilyDemo }: { state: DemoState; dispatch: Dispatch<ResponderAction>; showFamilyDemo: () => void }) {
+  const liveMode = useDashboardData()?.mode === 'live';
   const [condition, setCondition] = useState<VisitReport['condition'] | ''>('');
   const [notes, setNotes] = useState('');
   const heading = useRef<HTMLHeadingElement>(null);
@@ -35,9 +37,10 @@ export function ResponderPage({ state, dispatch, showFamilyDemo }: { state: Demo
     <header className="field-responder-header"><Brand /><span className="field-responder-role">Field Responder</span></header>
     <Botanical position="top" />
     <main className="field-responder-main">
-      <section className="field-responder-heading"><p>Good morning,</p><h1 ref={heading} tabIndex={-1}>{report ? 'Visit completed' : 'Daniel Lim'}</h1><p>{report ? 'Thank you for checking on Puan Aisha.' : 'A little care makes a big difference.'}</p></section>
-      <div className="field-responder-demo-label"><Icon name="info"/><span>Demo only · simulated assignment and updates</span></div>
-      {!assigned || blocked ? <section className="field-responder-card"><span className="field-responder-card-icon"><Icon name="bell" /></span><h2>{blocked ? 'Assignment needs coordinator review' : 'No active assignment for Daniel'}</h2><p className="field-responder-muted">{blocked ? 'This incident is escalated. Start a fresh demonstration to try the field responder flow.' : 'Load the Puan Aisha demonstration assignment to begin. This resets the shared demo incident.'}</p><button className="field-responder-button" onClick={reset}>Load Daniel’s Demo Assignment</button></section> : report ? <>
+      <section className="field-responder-heading"><p>Good morning,</p><h1 ref={heading} tabIndex={-1}>{liveMode ? 'Field Responder' : report ? 'Visit completed' : 'Daniel Lim'}</h1><p>{liveMode ? 'Live resident incidents · read-only' : report ? 'Thank you for checking on Puan Aisha.' : 'A little care makes a big difference.'}</p></section>
+      <DashboardModeControl/>
+      <div className="field-responder-demo-label"><Icon name="info"/><span>{liveMode ? 'Live Mode · no confirmed responder assignment' : 'Demo only · simulated assignment and updates'}</span></div>
+      {liveMode ? <LiveIncidentPanel responder/> : !assigned || blocked ? <section className="field-responder-card"><span className="field-responder-card-icon"><Icon name="bell" /></span><h2>{blocked ? 'Assignment needs coordinator review' : 'No active assignment for Daniel'}</h2><p className="field-responder-muted">{blocked ? 'This incident is escalated. Start a fresh demonstration to try the field responder flow.' : 'Load the Puan Aisha demonstration assignment to begin. This resets the shared demo incident.'}</p><button className="field-responder-button" onClick={reset}>Load Daniel’s Demo Assignment</button></section> : report ? <>
         <section className={`field-responder-card field-responder-confirmation${report.condition === 'needs-assistance' ? ' needs-assistance' : ''}`} aria-label="Visit confirmation">
           <span className="field-responder-success"><Icon name={report.condition === 'safe' ? 'check' : 'history'} /></span><h2>Visit report submitted</h2><p className="field-responder-muted">16 October 2026 · {report.submittedAt}</p>
           <div className="field-responder-result"><span>Resident condition</span><strong>{report.condition === 'safe' ? 'Safe' : 'Needs further assistance'}</strong><p>{report.condition === 'safe' ? 'Daniel’s demo visit is complete.' : 'Your visit is complete. The incident stays open for coordinator follow-up.'}</p></div>
@@ -66,7 +69,7 @@ export function ResponderPage({ state, dispatch, showFamilyDemo }: { state: Demo
           <button className="field-responder-button" type="submit" disabled={!condition}>Submit Report & Complete Visit <Icon name="check"/></button>
         </form></section>}
       </>}
-      <p className="field-responder-footer">FamilyCare · City of Elmina<br/>16 October 2026 · Mock data, no live dispatch</p>
+      <p className="field-responder-footer">FamilyCare · City of Elmina<br/>{liveMode ? 'Backend incident data · no live dispatch actions' : '16 October 2026 · Mock data, no live dispatch'}</p>
     </main><div className="field-responder-garden"><Botanical position="bottom"/></div>
   </div>;
 }

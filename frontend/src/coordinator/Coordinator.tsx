@@ -1,3 +1,4 @@
+import { useDashboardData } from '../data/DashboardData';
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { CoordinatorDemo } from './CoordinatorDemo';
@@ -85,7 +86,8 @@ function AdvancedCoordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch
 
 export function Coordinator({state,dispatch}:{state:DemoState;dispatch:Dispatch<Action>}) {
   const location = useLocation();
-  return useAdvancedCoordinator(location.pathname, location.search)
+  const data = useDashboardData();
+  return data?.mode !== 'live' && useAdvancedCoordinator(location.pathname, location.search)
     ? <AdvancedCoordinator state={state} dispatch={dispatch}/>
     : <CoordinatorDemo state={state} dispatch={dispatch}/>;
 }

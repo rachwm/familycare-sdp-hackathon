@@ -1,3 +1,4 @@
+import { DashboardDataProvider } from './data/DashboardData';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { FamilyDemoContext } from './coordinator/familyBridge';
@@ -91,8 +92,8 @@ export default function App() {
     try { sessionStorage.setItem(MODE_KEY, value); } catch { /* Private browsing may disable storage. */ }
     if (/^\/(incidents|activities)\//.test(location.pathname)) navigate('/');
   }
-  if (responderRoute) return <ResponderPage state={demo} dispatch={responderDispatch} showFamilyDemo={() => changeMode('demo')} />;
-  if (location.pathname.startsWith('/coordinator')) return <Routes><Route path='/coordinator/*' element={<Coordinator state={demo} dispatch={dispatch} />} /></Routes>;
+  if (responderRoute) return <DashboardDataProvider><ResponderPage state={demo} dispatch={responderDispatch} showFamilyDemo={() => changeMode('demo')} /></DashboardDataProvider>;
+  if (location.pathname.startsWith('/coordinator')) return <DashboardDataProvider><Routes><Route path='/coordinator/*' element={<Coordinator state={demo} dispatch={dispatch} />} /></Routes></DashboardDataProvider>;
   return <LiveContext.Provider value={{ mode, ...live }}><FamilyDemoContext.Provider value={mode === 'demo' && !unusual && demo.source !== 'family' ? demo : undefined}>
     <div className={`app-shell${detail ? ' app-shell--detail' : ''}`}>
       <Botanical position="top" />
