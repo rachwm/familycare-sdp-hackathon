@@ -14,7 +14,7 @@ export function HomePage({ scenario }: { scenario: Scenario }) {
   // The reference shows the latest incident followed by the morning updates.
   const activities = live.mode === 'live' ? live.incidents.map(toLiveActivity) : familyActivities(scenario, demo).filter(activity => activity.id !== 'resident-check-in' && activity.id !== 'unusual-check-in');
   return <>
-    <section className="greeting"><p>Good morning,</p><h1>Nur Aisha</h1><span>Stay connected with your loved ones.</span></section>
+    <section className="greeting"><p>Good morning,</p><h1>Sarah</h1><span>Stay connected with your loved ones.</span></section>
     {live.mode === 'demo' && <p className="sr-only" role="status">{state.status}. {state.description}</p>}
     <ResidentCard scenario={scenario} />
     {live.mode === 'live' && <LiveNotice empty={!live.incidents.length && !live.loading && !live.error} />}

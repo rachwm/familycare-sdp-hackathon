@@ -79,3 +79,13 @@ export async function fetchLiveIncidents(signal?: AbortSignal, request: typeof f
   if (!Array.isArray(data) || !data.every(isLiveIncident)) throw new Error('Unexpected incident response');
   return sortIncidents(data);
 }
+
+// Uses the same contract validation as the Family Dashboard list request.
+export async function fetchLiveIncident(eventId: string, signal?: AbortSignal, request: typeof fetch = fetch, baseUrl = '') {
+  const response = await request(`${baseUrl.replace(/\/$/, '')}/api/incidents/${encodeURIComponent(eventId)}`, { signal });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Incident request failed: ${response.status}`);
+  const data: unknown = await response.json();
+  if (!isLiveIncident(data) || data.event_id !== eventId) throw new Error('Unexpected incident response');
+  return data;
+}
