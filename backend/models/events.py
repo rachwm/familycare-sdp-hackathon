@@ -62,6 +62,10 @@ IncidentActionType = Literal[
 ResponderStatus = Literal[
     "not_requested",
     "requested",
+    "assigned",
+    "accepted",
+    "on_the_way",
+    "arrived",
     "resolved",
 ]
 
@@ -133,6 +137,12 @@ class FallEvent(BaseModel):
     responder_request_timestamp: datetime | None = None
     resolution_timestamp: datetime | None = None
 
+    responder_id: str | None = None
+    responder_name: str | None = None
+    responder_phone: str | None = None
+    responder_updates: dict[str, datetime] = Field(default_factory=dict)
+    visit_report: dict[str, str] | None = None
+
     details: FallEventDetails
 
 
@@ -174,3 +184,18 @@ class IncidentActionResult(BaseModel):
     action: IncidentActionType
     message: str
     event: FallEvent
+
+class AssignResponderRequest(BaseModel):
+    responder_id: str = Field(min_length=1)
+    responder_name: str = Field(min_length=1)
+    responder_phone: str
+
+
+class UpdateResponderStatusRequest(BaseModel):
+    responder_status: Literal["accepted", "on_the_way", "arrived"]
+
+
+class VisitReportRequest(BaseModel):
+    summary: str = Field(min_length=1, max_length=1000)
+    resident_condition: str = Field(min_length=1, max_length=100)
+    action_taken: str = Field(min_length=1, max_length=1000)

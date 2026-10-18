@@ -1,7 +1,8 @@
+from backend.models.events import UtilityPayload, IncidentResponse
 from fastapi import APIRouter
 import uuid
-from models.events import UtilityPayload, IncidentResponse
-from services.websocket_manager import manager
+from backend.models.events import UtilityPayload, IncidentResponse
+from backend.services.websocket_manager import manager
 import sys
 import os
 
