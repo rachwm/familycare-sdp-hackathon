@@ -21,9 +21,13 @@ function isPendingCompanionIncident(value: unknown): value is PendingCompanionIn
 }
 
 /** Read the newest outstanding safety check-in from the backend incident list. */
-export function latestPendingCompanionIncidentId(incidents: unknown): string | null {
+export function latestPendingCompanionIncidentId(
+  incidents: unknown,
+  newerThanMs = Number.NEGATIVE_INFINITY,
+): string | null {
   if (!Array.isArray(incidents)) return null;
   const latest = incidents.filter(isPendingCompanionIncident)
+    .filter(incident => Date.parse(incident.timestamp) >= newerThanMs)
     .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))[0];
   return latest?.event_id ?? null;
 }
