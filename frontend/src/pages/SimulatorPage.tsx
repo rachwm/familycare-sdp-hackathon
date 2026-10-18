@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './SimulatorPage.css';
 import { createFallSimulation } from './fallApi';
 import { createMedicationReminder } from './reminderApi';
+import { createUtilitySimulation } from './utilityApi';
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}simulator/${name}`;
 
@@ -20,6 +21,7 @@ export function SimulatorPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<Scenario | null>(null);
   const [result, setResult] = useState('');
+  const [backendResult, setBackendResult] = useState('');
   const [starting, setStarting] = useState(false);
   const [startingScenario, setStartingScenario] = useState<string | null>(null);
   const [apiError, setApiError] = useState('');
@@ -39,7 +41,14 @@ export function SimulatorPage() {
   async function runScenario(scenario: Scenario) {
     if (busyRef.current) return;
     setApiError('');
-    if (scenario.id === 'fall' || scenario.id === 'medication') {
+    setResult('');
+    setBackendResult('');
+    if (
+      scenario.id === 'fall' ||
+      scenario.id === 'medication' ||
+      scenario.id === 'inactivity' ||
+      scenario.id === 'utility'
+    ) {
       busyRef.current = true;
       setStarting(true);
       setStartingScenario(scenario.id);
@@ -48,9 +57,17 @@ export function SimulatorPage() {
         if (scenario.id === 'fall') {
           const event = await createFallSimulation();
           if (mountedRef.current) navigate(`/companion?eventId=${encodeURIComponent(event.event_id)}`);
-        } else {
+        } else if (scenario.id === 'medication') {
           const reminder = await createMedicationReminder();
           if (mountedRef.current) navigate(`/companion?reminderId=${encodeURIComponent(reminder.id)}`);
+        } else {
+          const anomaly = await createUtilitySimulation(scenario.id);
+          if (mountedRef.current) {
+            setSelected(scenario);
+            setBackendResult(
+              `Backend anomaly detected (${Math.round(anomaly.confidence * 100)}% confidence): ${anomaly.reason}`,
+            );
+          }
         }
       } catch (error) {
         if (mountedRef.current) setApiError(error instanceof Error ? error.message : 'Could not start the simulation.');
@@ -60,7 +77,6 @@ export function SimulatorPage() {
       }
       return;
     }
-    setResult('');
     setSelected(scenario);
   }
 
@@ -134,6 +150,7 @@ export function SimulatorPage() {
           {selected && (
             <section className="simulator-preview" aria-labelledby="simulator-preview-title">
               <h2 ref={previewHeading} tabIndex={-1} id="simulator-preview-title">{selected.title} · Practice preview</h2>
+              {backendResult && <p className="simulator-notice" role="status">{backendResult}</p>}
               <p>{selected.prompt}</p>
               <div className="simulator-preview-actions">
                 {selected.actions.map(action => (
@@ -141,11 +158,11 @@ export function SimulatorPage() {
                 ))}
               </div>
               <p className="simulator-result" role="status" aria-live="polite" aria-atomic="true">{result}</p>
-              <button className="simulator-reset" type="button" onClick={() => { setResult(''); previewHeading.current?.focus(); }}>Reset practice</button>
+              <button className="simulator-reset" type="button" onClick={() => { setResult(''); setBackendResult(''); previewHeading.current?.focus(); }}>Reset practice</button>
             </section>
           )}
 
-          <p className="simulator-footer-note">Fall check-ins and reminder display: connected backend · Reminder responses and other scenarios: local previews.</p>
+          <p className="simulator-footer-note">Fall, inactivity and utility detection plus reminder display: connected backend · Preview acknowledgement buttons do not create additional incidents.</p>
         </main>
       </div>
     </div>

@@ -110,3 +110,22 @@ export async function sendResponderCommand(eventId: string, command: ResponderCo
   if (body.status !== 'success' || !isLiveIncident(body.event) || body.event.event_id !== eventId) throw new Error('Unexpected responder update response');
   return body.event as LiveIncident;
 }
+
+export async function resolveFollowUpIncident(
+  eventId: string,
+  baseUrl = '',
+  request: typeof fetch = fetch,
+) {
+  const response = await request(`${baseUrl.replace(/\/$/, '')}/api/incidents/${encodeURIComponent(eventId)}/actions`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resolve' }), signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(typeof body?.detail === 'string' ? body.detail : `Incident update failed: ${response.status}`);
+  }
+  const body = await response.json();
+  if (body.accepted !== true || !isLiveIncident(body.event) || body.event.event_id !== eventId || body.event.status !== 'resolved') {
+    throw new Error('Unexpected incident resolution response');
+  }
+  return body.event as LiveIncident;
+}

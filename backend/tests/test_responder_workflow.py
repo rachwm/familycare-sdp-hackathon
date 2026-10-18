@@ -64,3 +64,11 @@ def test_further_assistance_report_does_not_silently_resolve_incident():
     assert event['requires_responder'] is True
     assert event['visit_report']['submitted_at']
     assert post('responder-status', {'responder_status':'arrived'}).status_code == 409
+    resolved=client.post('/api/incidents/workflow-1/actions',json={'action':'resolve'})
+    assert resolved.status_code == 200
+    assert resolved.json()['event']['status'] == 'resolved'
+
+def test_visit_report_rejects_unknown_resident_condition():
+    arrive()
+    response=post('visit-report',{'summary':'Checked.','resident_condition':'unknown','action_taken':'Checked resident.'})
+    assert response.status_code == 422

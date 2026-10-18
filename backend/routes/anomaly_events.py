@@ -1,8 +1,6 @@
-from pathlib import Path
+import os
 import uuid
 
-import os
-import sys
 from fastapi import APIRouter
 
 from backend.models.events import IncidentResponse, UtilityPayload
@@ -12,7 +10,7 @@ from utility_anomaly.anomaly_detector import UtilityAnomalyDetector
 
 router = APIRouter()
 
-# 2. Build dynamic absolute path to model binary
+# Build an absolute path so the model loads regardless of the launch directory.
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", "utility_anomaly", "models"))
 

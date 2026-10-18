@@ -20,6 +20,12 @@ class UtilityAnomalyDetector:
                 "is_anomaly": False,
                 "confidence": 0.0,
                 "reason": "Resident is away from home",
+                "metrics": {
+                    "power_kw": power_kw,
+                    "water_lpm": water_lpm,
+                    "inactivity_mins": inactivity_mins,
+                    "z_score": 0.0,
+                },
                 "resident_state": "AWAY"
             }
             

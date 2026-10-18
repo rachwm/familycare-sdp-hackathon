@@ -5,7 +5,7 @@ uvicorn[standard]
 # Data processing and machine learning
 numpy
 pandas
-scikit-learn
+scikit-learn==1.7.2
 joblib
 
 # Model-result charts

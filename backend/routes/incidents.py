@@ -7,24 +7,19 @@ import json
 from fastapi import APIRouter, HTTPException, Query, status
 
 from backend.models.events import (
-    FallEvent,
     AssignResponderRequest,
-    UpdateResponderStatusRequest,
-    VisitReportRequest,
+    FallEvent,
     IncidentActionRequest,
     IncidentActionResult,
     IncidentStatus,
-    AssignResponderRequest,
     UpdateResponderStatusRequest,
-    VisitReportRequest
+    VisitReportRequest,
 )
 from backend.services.incident_manager import (
     IncidentNotFoundError,
     InvalidIncidentTransitionError,
     incident_manager,
 )
-from backend.services.websocket_manager import manager
-
 from backend.services.websocket_manager import manager
 
 router = APIRouter(

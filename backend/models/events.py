@@ -197,5 +197,5 @@ class UpdateResponderStatusRequest(BaseModel):
 
 class VisitReportRequest(BaseModel):
     summary: str = Field(min_length=1, max_length=1000)
-    resident_condition: str = Field(min_length=1, max_length=100)
+    resident_condition: Literal["safe", "needs_further_assistance"]
     action_taken: str = Field(min_length=1, max_length=1000)
