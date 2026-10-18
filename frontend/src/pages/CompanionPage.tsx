@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../components/Brand';
 import { useBackendEvents } from '../data/backendEvents';
 import { MedicationCompanion } from './MedicationCompanion';
+import { incomingCompanionIncidentId, latestPendingCompanionIncidentId } from './companionIncoming';
+import { request } from './fallApi';
 import { getFallIncident, submitFallResponse, type FallIncident, type ResidentResponse } from './fallApi';
 import './CompanionPage.css';
 
@@ -27,14 +29,37 @@ export function CompanionPage() {
   const params = new URLSearchParams(search);
   const reminderId = params.get('reminderId');
   const eventId = params.get('eventId');
-  useBackendEvents(event => {
-    if (event.type !== 'ROUTINE_REMINDER' || reminderId || eventId) return;
-    if (typeof event.data !== 'object' || event.data === null) return;
-    const id = (event.data as Record<string, unknown>).id;
-    if (typeof id === 'string' && id) {
-      navigate(`/companion?reminderId=${encodeURIComponent(id)}`);
+  const navigateToIncident = useCallback((id: string) => {
+    navigate(`/companion?eventId=${encodeURIComponent(id)}`);
+  }, [navigate]);
+  const refreshPending = useCallback(async () => {
+    if (reminderId || eventId) return;
+    try {
+      const incidents = await request('/api/incidents');
+      const id = latestPendingCompanionIncidentId(incidents);
+      if (id) navigateToIncident(id);
+    } catch {
+      // The WebSocket remains active; retry on the next poll.
     }
+  }, [reminderId, eventId, navigateToIncident]);
+  useBackendEvents(event => {
+    if (reminderId || eventId) return;
+    if (event.type === 'ROUTINE_REMINDER' && typeof event.data === 'object' && event.data !== null) {
+      const id = (event.data as Record<string, unknown>).id;
+      if (typeof id === 'string' && id) navigate(`/companion?reminderId=${encodeURIComponent(id)}`);
+      return;
+    }
+    const incomingId = incomingCompanionIncidentId(event);
+    if (incomingId) navigateToIncident(incomingId);
+    else if (event.type === 'INCIDENT_UPDATED' || event.type === 'DEMO_DATA_RESET') void refreshPending();
   }, !reminderId && !eventId);
+  useEffect(() => {
+    if (reminderId || eventId) return;
+    void refreshPending();
+    const timer = window.setInterval(() => { void refreshPending(); }, 3000);
+    return () => window.clearInterval(timer);
+  }, [reminderId, eventId, refreshPending]);
+
   if (reminderId && !eventId && params.get('demo') !== 'fall') {
     return <MedicationCompanion key={search} reminderId={reminderId} />;
   }
@@ -227,7 +252,7 @@ function CompanionSession({ search }: { search: string }) {
           </div>
         )}
         {(phase === 'complete' || (!connected && choice !== null)) && (
-          <Link className="companion-home-link" to="/">Back to FamilyCare Home</Link>
+          <Link className="companion-home-link" to="/simulator">Back to Home Companion</Link>
         )}
       </section>
     </div>
