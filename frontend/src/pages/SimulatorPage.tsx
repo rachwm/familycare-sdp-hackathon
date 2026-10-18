@@ -123,7 +123,7 @@ export function SimulatorPage() {
           <strong>FamilyCare</strong>
           <span>A Safer Home. A More Connected Tomorrow.</span>
         </div>
-        <Link className="simulator-alert-link" to="/alerts" aria-label="View family alerts">
+        <Link className="simulator-alert-link" to="/simulator" aria-label="Home Companion menu">
           <img src={asset('bell.svg')} width="34" height="34" alt="" />
         </Link>
       </header>
@@ -131,7 +131,7 @@ export function SimulatorPage() {
       <div className="simulator-workspace">
         <nav className="simulator-sidebar" aria-label="FamilyCare navigation">
           <img className="simulator-botanical-sidebar" src={asset('botanical-sidebar.png')} alt="" />
-          <Link className="simulator-nav-link simulator-nav-link--home" to="/">
+          <Link className="simulator-nav-link simulator-nav-link--home" to="/simulator">
             <img src={asset('home.svg')} width="40" height="40" alt="" />Home
           </Link>
           <Link className="simulator-nav-link" to="/history">
