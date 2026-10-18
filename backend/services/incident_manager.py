@@ -157,7 +157,7 @@ class IncidentManager:
                     "the incident has been escalated."
                 )
 
-            if event.responder_status == "requested":
+            if event.responder_status != "not_requested":
                 raise InvalidIncidentTransitionError(
                     "A responder has already been requested."
                 )
@@ -188,6 +188,39 @@ class IncidentManager:
 
         self._events[event_id] = updated_event
         return updated_event
+
+    def apply_responder_update(self, event_id: str, kind: str, payload) -> FallEvent:
+        """Persist the existing responder endpoints in the prototype store."""
+        event = self.get_event(event_id)
+        if event.status == "resolved" or event.visit_report is not None:
+            raise InvalidIncidentTransitionError("This visit is already completed.")
+        now = datetime.now(MALAYSIA_TIMEZONE)
+        updates = dict(event.responder_updates)
+        if kind == "assign":
+            if not event.requires_responder or event.responder_id is not None:
+                raise InvalidIncidentTransitionError("Incident is not awaiting assignment.")
+            changes = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
+            changes["responder_status"] = "assigned"
+            updates["assigned"] = now
+        elif kind == "status":
+            previous = {"accepted": "assigned", "on_the_way": "accepted", "arrived": "on_the_way"}
+            if not event.responder_id or event.responder_status != previous[payload.responder_status]:
+                raise InvalidIncidentTransitionError("Responder status must follow assignment, acceptance, departure and arrival.")
+            changes = {"responder_status": payload.responder_status}
+            updates[payload.responder_status] = now
+        else:
+            if not event.responder_id or event.responder_status != "arrived":
+                raise InvalidIncidentTransitionError("A visit report requires confirmed arrival.")
+            report = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
+            report["submitted_at"] = now.isoformat()
+            changes = {"visit_report": report}
+            if payload.resident_condition == "safe":
+                changes.update(status="resolved", responder_status="resolved", requires_responder=False,
+                               requires_resident_check_in=False, resolution_timestamp=now)
+        changes["responder_updates"] = updates
+        updated = event.model_copy(update=changes) if hasattr(event, "model_copy") else event.copy(update=changes)
+        self._events[event_id] = updated
+        return updated
 
 
 incident_manager = IncidentManager()

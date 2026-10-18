@@ -13,7 +13,10 @@ export interface LiveIncident {
   resident_response: 'resident_okay' | 'resident_needs_help' | 'timeout' | null;
   response_timestamp: string | null;
   requires_responder: boolean;
-  responder_status: 'not_requested' | 'requested' | 'resolved';
+  responder_status: 'not_requested' | 'requested' | 'assigned' | 'accepted' | 'on_the_way' | 'arrived' | 'resolved';
+  responder_id?: string | null; responder_name?: string | null; responder_phone?: string | null;
+  responder_updates?: Record<string, string>;
+  visit_report?: { summary: string; resident_condition: string; action_taken: string; submitted_at: string } | null;
   responder_request_timestamp: string | null;
   resolution_timestamp: string | null;
   simulation: boolean;
@@ -30,7 +33,7 @@ export function isLiveIncident(value: unknown): value is LiveIncident {
     && statuses.includes(item.status as IncidentStatus) && validDate(item.timestamp)
     && ['warning', 'critical'].includes(item.severity as string)
     && [null, 'resident_okay', 'resident_needs_help', 'timeout'].includes(item.resident_response as string | null)
-    && ['not_requested', 'requested', 'resolved'].includes(item.responder_status as string)
+    && ['not_requested', 'requested', 'assigned', 'accepted', 'on_the_way', 'arrived', 'resolved'].includes(item.responder_status as string)
     && optionalDate(item.response_timestamp) && optionalDate(item.responder_request_timestamp)
     && optionalDate(item.resolution_timestamp) && typeof item.simulation === 'boolean';
 }
@@ -45,6 +48,7 @@ export function incidentTone(incident: LiveIncident): Tone {
   return incident.status === 'resolved' ? 'green' : incident.status === 'awaiting_resident_response' ? 'orange' : 'red';
 }
 export function incidentDescription(incident: LiveIncident) {
+  if (incident.visit_report) return `${incident.responder_name ?? 'Responder'} reported: ${incident.visit_report.resident_condition.replace(/_/g, ' ')}. ${incident.visit_report.summary} ${incident.visit_report.action_taken}`;
   if (incident.status === 'resolved') return incident.resident_response === 'resident_okay'
     ? 'Puan Aisha confirmed she is okay.' : 'The incident has been resolved.';
   if (incident.status === 'resident_needs_help') return 'Puan Aisha requested help.';
@@ -88,4 +92,21 @@ export async function fetchLiveIncident(eventId: string, signal?: AbortSignal, r
   const data: unknown = await response.json();
   if (!isLiveIncident(data) || data.event_id !== eventId) throw new Error('Unexpected incident response');
   return data;
+}
+
+export type ResponderCommand =
+  | { endpoint: 'assign-responder'; payload: { responder_id: string; responder_name: string; responder_phone: string } }
+  | { endpoint: 'responder-status'; payload: { responder_status: 'accepted' | 'on_the_way' | 'arrived' } }
+  | { endpoint: 'visit-report'; payload: { summary: string; resident_condition: string; action_taken: string } };
+export async function sendResponderCommand(eventId: string, command: ResponderCommand, baseUrl = '', request: typeof fetch = fetch) {
+  const response = await request(`${baseUrl.replace(/\/$/, '')}/api/incidents/${encodeURIComponent(eventId)}/${command.endpoint}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(command.payload), signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(typeof body?.detail === 'string' ? body.detail : `Responder update failed: ${response.status}`);
+  }
+  const body = await response.json();
+  if (body.status !== 'success' || !isLiveIncident(body.event) || body.event.event_id !== eventId) throw new Error('Unexpected responder update response');
+  return body.event as LiveIncident;
 }
