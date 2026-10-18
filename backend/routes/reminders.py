@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from models.events import Reminder
+
 from backend.models.events import Reminder
 from typing import List
 import uuid

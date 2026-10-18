@@ -16,6 +16,8 @@ import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { IncidentPage } from './pages/IncidentPage';
 import { ActivityPage, NotFoundPage, ResidentPage, SettingsPage } from './pages/DetailPages';
+import { CompanionPage } from './pages/CompanionPage';
+import { SimulatorPage } from './pages/SimulatorPage';
 
 const STORAGE_KEY = 'familycare-demo-scenario';
 const MODE_KEY = 'familycare-mode';
@@ -84,6 +86,12 @@ export default function App() {
     try { sessionStorage.setItem(MODE_KEY, value); } catch { /* Private browsing may disable storage. */ }
     if (/^\/(incidents|activities)\//.test(location.pathname)) navigate('/');
   }
+  if (location.pathname === '/companion') {
+  return <CompanionPage />;
+}
+if (location.pathname === '/simulator') {
+  return <SimulatorPage />;
+}
   if (location.pathname.startsWith('/coordinator')) return <Routes><Route path='/coordinator/*' element={<Coordinator state={demo} dispatch={dispatch} />} /></Routes>;
   return <LiveContext.Provider value={{ mode, ...live }}><FamilyDemoContext.Provider value={mode === 'demo' && !unusual && demo.source === 'coordinator' ? demo : undefined}>
     <div className={`app-shell${detail ? ' app-shell--detail' : ''}`}>
@@ -92,6 +100,7 @@ export default function App() {
       <main ref={main} tabIndex={-1} id="main-content">
         <Routes>
           <Route path="/" element={<HomePage scenario={scenario} />} />
+          <Route path="/companion" element={<CompanionPage />} />
           <Route path="/alerts" element={<AlertsPage scenario={scenario} />} />
           <Route path="/history" element={<HistoryPage scenario={scenario} />} />
           <Route path="/profile" element={<ProfilePage />} />

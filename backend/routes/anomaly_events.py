@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from pathlib import Path
 import uuid
-from models.events import UtilityPayload, IncidentResponse
-from services.websocket_manager import manager
+
 import sys
 import os
 
@@ -13,7 +13,13 @@ from backend.services.websocket_manager import manager
 
 router = APIRouter()
 # Load ML Models and Adaptive Baseline once on startup
-detector = UtilityAnomalyDetector(model_dir="../utility_anomaly/models")
+MODEL_DIR = (
+    Path(__file__).resolve().parents[2]
+    / "utility_anomaly"
+    / "models"
+)
+
+detector = UtilityAnomalyDetector(model_dir=str(MODEL_DIR))
 
 @router.post("/utility-anomaly", response_model=IncidentResponse)
 async def process_utility_event(payload: UtilityPayload):

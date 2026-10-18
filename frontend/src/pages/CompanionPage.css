@@ -1,0 +1,164 @@
+.companion-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1440px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 48px;
+  background: #f4fbf7;
+}
+
+.companion-page h1 {
+  font-size: 36px;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.companion-page p {
+  font-size: 24px;
+  line-height: 1.5;
+}
+
+.companion-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.companion-button {
+  width: 100%;
+  min-height: 120px;
+  padding: 24px;
+  border: 0;
+  border-radius: 20px;
+  color: white;
+  font: inherit;
+  font-size: 32px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.companion-button--okay {
+  background: #00543b;
+}
+
+.companion-button--help {
+  background: #c52222;
+}
+
+.companion-button:focus-visible {
+  outline: 4px solid #142d65;
+  outline-offset: 4px;
+}
+
+.companion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #d7eadd;
+}
+
+.companion-header .brand-copy strong {
+  font-size: 36px;
+}
+
+.companion-header .brand-copy small {
+  font-size: 18px;
+}
+
+.companion-mode {
+  padding: 12px 20px;
+  border-radius: 24px;
+  background: #def3e7;
+  color: #00543b;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.companion-feedback {
+  margin-top: 32px;
+}
+
+.companion-feedback:has(p) {
+  padding: 24px;
+  border: 2px solid #00543b;
+  border-radius: 20px;
+  background: white;
+  color: #003f2d;
+}
+
+.companion-feedback p {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.companion-feedback .companion-demo-note {
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.companion-countdown {
+  margin-top: 24px;
+  padding: 24px;
+  border: 2px solid #946200;
+  border-radius: 20px;
+  background: #fff5df;
+  color: #553900;
+  text-align: center;
+}
+
+.companion-countdown p {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+.companion-countdown-number {
+  font-size: clamp(64px, 8vw, 96px);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.companion-button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.companion-voice-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: fit-content;
+  min-height: 64px;
+  margin-bottom: 24px;
+  padding: 12px 20px;
+  border: 2px solid #00543b;
+  border-radius: 16px;
+  color: #003f2d;
+  font-size: 26px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.companion-voice-control input {
+  width: 32px;
+  height: 32px;
+  accent-color: #00543b;
+}
+
+.companion-voice-control input:focus-visible {
+  outline: 4px solid #142d65;
+  outline-offset: 4px;
+}
+
+.companion-voice-error {
+  color: #8b2020;
+  font-size: 24px;
+}
