@@ -119,3 +119,30 @@ def test_demo_reset_clears_incidents_and_reminders():
     }
     assert incident_manager.list_events() == []
     assert active_reminders == []
+
+
+def test_activity_simulator_creates_connected_check_in():
+    """Swagger demo route must create a fresh, actionable inactivity event."""
+    response = client.post("/api/simulator/activity", json={})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["is_anomaly"] is True
+    event_id = result["incident_id"]
+
+    saved = client.get(f"/api/incidents/{event_id}")
+    assert saved.status_code == 200
+    incident = saved.json()
+    assert incident["event_type"] == "unusual_activity"
+    assert incident["anomaly_kind"] == "inactivity"
+    assert incident["resident_id"] == "resident-01"
+    assert incident["simulation"] is True
+    assert incident["status"] == "awaiting_resident_response"
+    assert incident["timestamp"] == result["timestamp"]
+
+    decision = client.post(
+        f"/api/incidents/{event_id}/response",
+        json={"response": "resident_needs_help"},
+    )
+    assert decision.status_code == 200
+    assert decision.json()["event"]["status"] == "resident_needs_help"
+    assert decision.json()["event"]["requires_responder"] is True

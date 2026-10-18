@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
+from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from backend.models.events import FallEvent
+from backend.models.events import FallEvent, IncidentResponse, RoutineAnomalyDetails, RoutineAnomalyEvent
 from backend.models.simulator import (
     FallSimulationRequest,
     FallSimulationResponse,
 )
 from backend.routes.reminders import clear_reminders
-from backend.services.incident_manager import incident_manager
+from backend.services.incident_manager import MALAYSIA_TIMEZONE, incident_manager
 from backend.services.reminder_scheduler import clear_delivered_reminders
 from backend.services.websocket_manager import manager
 from fall_detection.fall_simulator import simulate_scenario
@@ -41,6 +43,63 @@ async def reset_demo_data() -> dict[str, int | str]:
         data=result,
     )
     return result
+
+
+@router.post("/activity", response_model=IncidentResponse)
+async def simulate_activity_anomaly() -> IncidentResponse:
+    """Create a guaranteed simulated inactivity alert for end-to-end demos.
+
+    Unlike POST /utility-anomaly, this endpoint does not perform ML inference.
+    Real sensor input must continue to use /utility-anomaly.
+    """
+    now = datetime.now(MALAYSIA_TIMEZONE)
+    incident_id = f"activity-{uuid4().hex[:12]}"
+    metrics = {
+        "power_kw": 0.1,
+        "water_lpm": 0.0,
+        "inactivity_mins": 180.0,
+        "z_score": 4.0,
+    }
+    reason = "Simulated extended inactivity detected; resident check-in required."
+    event = RoutineAnomalyEvent(
+        schema_version="1.0",
+        event_id=incident_id,
+        event_type="unusual_activity",
+        source="utility_anomaly_detector",
+        anomaly_kind="inactivity",
+        resident_id="resident-01",
+        location="living_room",
+        severity="warning",
+        status="awaiting_resident_response",
+        confidence=0.95,
+        timestamp=now,
+        requires_resident_check_in=True,
+        simulation=True,
+        details=RoutineAnomalyDetails(
+            anomaly_kind="inactivity",
+            reason=reason,
+            resident_state="HOME",
+            metrics=metrics,
+        ),
+    )
+    stored_event = incident_manager.create_event(event)
+    await manager.broadcast(
+        message_type="INCIDENT_CREATED",
+        data=(
+            stored_event.model_dump(mode="json")
+            if hasattr(stored_event, "model_dump")
+            else json.loads(stored_event.json())
+        ),
+    )
+    return IncidentResponse(
+        incident_id=incident_id,
+        timestamp=now.isoformat(),
+        is_anomaly=True,
+        confidence=0.95,
+        reason=reason,
+        metrics=metrics,
+        resident_state="HOME",
+    )
 
 
 @router.post(

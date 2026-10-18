@@ -3,8 +3,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   server: {
     allowedHosts: [
-      'labs-realize-smart-recreational.trycloudflare.com',
-      'delight-pittsburgh-mere-state.trycloudflare.com',
+      // Development-only: Cloudflare Quick Tunnels generate a new hostname each run.
+      '.trycloudflare.com',
     ],
     proxy: {
       '/api': 'http://127.0.0.1:8000',

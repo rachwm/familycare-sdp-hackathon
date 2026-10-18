@@ -17,9 +17,7 @@ from backend.models.events import (
 
 MALAYSIA_TIMEZONE = timezone(timedelta(hours=8))
 DEFAULT_INCIDENT_STORE = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "runtime"
+    Path(os.getenv("FAMILYCARE_DATA_DIR", str(Path(__file__).resolve().parents[2] / "data" / "runtime")))
     / "incidents.json"
 )
 

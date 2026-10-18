@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from contextlib import asynccontextmanager, suppress
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import settings
@@ -54,8 +56,15 @@ app.include_router(anomaly_events_router)
 app.include_router(reminders_router)
 
 
-@app.get("/")
-def root() -> dict[str, str]:
+# In Render's Docker image the production React build lives beside the API.
+# Local Vite development does not have to create this directory.
+FRONTEND_DIST = (Path(__file__).resolve().parents[1] / "frontend" / "dist").resolve()
+
+
+@app.get("/", response_model=None)
+def root() -> dict[str, str] | FileResponse:
+    if (FRONTEND_DIST / "index.html").is_file():
+        return FileResponse(FRONTEND_DIST / "index.html")
     return {
         "name": settings.app_name,
         "status": "running",
@@ -80,3 +89,24 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+
+@app.get("/{file_path:path}", include_in_schema=False, response_model=None)
+def serve_frontend(file_path: str) -> FileResponse:
+    """Serve static React files and BrowserRouter deep links from the same origin.
+
+    FastAPI routes (including the WebSocket, API, Swagger and health) remain
+    registered above this fallback. Unknown API paths must not return index.html.
+    """
+    reserved = {"api", "utility-anomaly", "reminders", "ws", "docs", "redoc", "openapi.json", "health"}
+    if file_path.split("/", 1)[0] in reserved:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not (FRONTEND_DIST / "index.html").is_file():
+        raise HTTPException(status_code=404, detail="Frontend not built")
+    requested = (FRONTEND_DIST / file_path).resolve()
+    if requested.is_relative_to(FRONTEND_DIST) and requested.is_file():
+        return FileResponse(requested)
+    # Do not return HTML for missing JS, CSS, image, or sound assets.
+    if file_path.split("/", 1)[0] in {"assets", "audio"} or file_path.startswith("simulator/"):
+        raise HTTPException(status_code=404, detail="Asset not found")
+    return FileResponse(FRONTEND_DIST / "index.html")
