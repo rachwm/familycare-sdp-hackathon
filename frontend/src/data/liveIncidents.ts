@@ -4,7 +4,8 @@ export type IncidentStatus = 'awaiting_resident_response' | 'resident_needs_help
 export const FAMILY_RESIDENT_ID = 'resident-01';
 export interface LiveIncident {
   event_id: string;
-  event_type: 'possible_fall';
+  event_type: 'possible_fall' | 'unusual_activity';
+  anomaly_kind?: 'inactivity' | 'utility';
   resident_id: string;
   location: string;
   status: IncidentStatus;
@@ -28,7 +29,11 @@ const optionalDate = (value: unknown) => value === null || validDate(value);
 export function isLiveIncident(value: unknown): value is LiveIncident {
   if (!value || typeof value !== 'object') return false;
   const item = value as Record<string, unknown>;
-  return typeof item.event_id === 'string' && item.event_type === 'possible_fall'
+  const validType = item.event_type === 'possible_fall' || item.event_type === 'unusual_activity';
+  const validKind = item.event_type !== 'unusual_activity'
+    || item.anomaly_kind === 'inactivity'
+    || item.anomaly_kind === 'utility';
+  return typeof item.event_id === 'string' && validType && validKind
     && typeof item.resident_id === 'string' && typeof item.location === 'string'
     && statuses.includes(item.status as IncidentStatus) && validDate(item.timestamp)
     && ['warning', 'critical'].includes(item.severity as string)
@@ -62,8 +67,13 @@ export function displayTime(timestamp: string) {
   return new Intl.DateTimeFormat('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(timestamp)).replace(/\b(am|pm)\b/gi, value => value.toUpperCase());
 }
 export function toLiveActivity(incident: LiveIncident): Activity {
+  const title = incident.event_type === 'possible_fall'
+    ? 'Possible fall detected'
+    : incident.anomaly_kind === 'utility'
+      ? 'Unusual utility activity detected'
+      : 'Unusual inactivity detected';
   return {
-    id: incident.event_id, incidentId: incident.event_id, title: 'Possible fall detected',
+    id: incident.event_id, incidentId: incident.event_id, title,
     description: `${incidentDescription(incident)}${incident.simulation ? ' Backend simulation.' : ''}`, time: displayTime(incident.timestamp),
     minutes: 0, date: 'today', icon: 'alert', tone: incidentTone(incident),
     category: 'incident', status: incidentLabel(incident),

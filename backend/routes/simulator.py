@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, HTTPException, status
 
 from backend.models.events import FallEvent
@@ -10,6 +12,7 @@ from backend.models.simulator import (
     FallSimulationResponse,
 )
 from backend.services.incident_manager import incident_manager
+from backend.services.websocket_manager import manager
 from fall_detection.fall_simulator import simulate_scenario
 
 
@@ -23,7 +26,7 @@ router = APIRouter(
     "/fall",
     response_model=FallSimulationResponse,
 )
-def simulate_fall_scenario(
+async def simulate_fall_scenario(
     request: FallSimulationRequest,
 ) -> FallSimulationResponse:
     """Run one deterministic fall or normal-activity scenario."""
@@ -43,6 +46,14 @@ def simulate_fall_scenario(
     if result.get("event_type") == "possible_fall":
         event = FallEvent(**result)
         stored_event = incident_manager.create_event(event)
+        await manager.broadcast(
+            message_type="INCIDENT_CREATED",
+            data=(
+                stored_event.model_dump(mode="json")
+                if hasattr(stored_event, "model_dump")
+                else json.loads(stored_event.json())
+            ),
+        )
 
         messages = {
             "fall": (

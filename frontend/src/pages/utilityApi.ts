@@ -53,6 +53,10 @@ export async function createUtilitySimulation(
         inactivity_mins: 180,
         door_transitions_15m: 0,
         resident_state: 'HOME',
+        resident_id: 'resident-01',
+        location: 'living_room',
+        simulation: true,
+        anomaly_kind: 'inactivity',
       }
     : {
         timestamp: new Date().toISOString(),
@@ -61,6 +65,10 @@ export async function createUtilitySimulation(
         inactivity_mins: 60,
         door_transitions_15m: 0,
         resident_state: 'HOME',
+        resident_id: 'resident-01',
+        location: 'living_room',
+        simulation: true,
+        anomaly_kind: 'utility',
       };
 
   const result = readUtilityResult(

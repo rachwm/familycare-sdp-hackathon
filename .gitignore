@@ -230,3 +230,4 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 data/utility/processed/training_feature_matrix.csv
+data/runtime/

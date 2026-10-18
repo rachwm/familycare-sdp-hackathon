@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../components/Brand';
+import { useBackendEvents } from '../data/backendEvents';
 import { MedicationCompanion } from './MedicationCompanion';
 import { getFallIncident, submitFallResponse, type FallIncident, type ResidentResponse } from './fallApi';
 import './CompanionPage.css';
@@ -22,9 +23,19 @@ function recordedMessage(event: FallIncident): string {
 
 export function CompanionPage() {
   const { search } = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(search);
   const reminderId = params.get('reminderId');
-  if (reminderId && !params.get('eventId') && params.get('demo') !== 'fall') {
+  const eventId = params.get('eventId');
+  useBackendEvents(event => {
+    if (event.type !== 'ROUTINE_REMINDER' || reminderId || eventId) return;
+    if (typeof event.data !== 'object' || event.data === null) return;
+    const id = (event.data as Record<string, unknown>).id;
+    if (typeof id === 'string' && id) {
+      navigate(`/companion?reminderId=${encodeURIComponent(id)}`);
+    }
+  }, !reminderId && !eventId);
+  if (reminderId && !eventId && params.get('demo') !== 'fall') {
     return <MedicationCompanion key={search} reminderId={reminderId} />;
   }
   // A new incident starts a fresh session, even when only the URL query changes.
@@ -122,7 +133,9 @@ function CompanionSession({ search }: { search: string }) {
       setVoiceStatus('The check-in has finished.');
       return;
     }
-    const filename = isFall ? 'fall-alert.wav' : 'greeting.wav';
+    const filename = incident?.event_type === 'unusual_activity'
+      ? 'greeting.wav'
+      : isFall ? 'fall-alert.wav' : 'greeting.wav';
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${filename}`);
     audioRef.current = audio;
     audio.volume = 1;
@@ -160,6 +173,20 @@ function CompanionSession({ search }: { search: string }) {
   }, []);
 
   const buttonsDisabled = isFall && (choice !== null || phase !== 'ready');
+  const checkInHeading = !connected
+    ? (isFall ? 'A possible fall was detected' : 'Good morning, Puan Aisha')
+    : incident?.event_type === 'unusual_activity'
+      ? incident.anomaly_kind === 'utility'
+        ? 'Unusual home activity was detected'
+        : 'Your usual activity was not detected'
+      : incident?.event_type === 'possible_fall'
+        ? 'A possible fall was detected'
+        : 'Loading your safety check-in';
+  const checkInPrompt = incident?.event_type === 'unusual_activity'
+    ? 'Puan Aisha, we noticed a change from your usual home routine. Are you okay?'
+    : isFall
+      ? 'Puan Aisha, are you okay? Please choose a button.'
+      : 'Your home companion is here for you.';
   let feedback = '';
   if (connected) {
     if (phase === 'loading') feedback = 'Loading your check-in…';
@@ -179,8 +206,8 @@ function CompanionSession({ search }: { search: string }) {
       {voiceError && <p className="companion-voice-error" role="status">{voiceError}</p>}
       {voiceStatus && <p role="status">{voiceStatus}</p>}
       <section aria-labelledby="companion-heading">
-        <h1 id="companion-heading">{isFall ? 'A possible fall was detected' : 'Good morning, Puan Aisha'}</h1>
-        <p>{isFall ? 'Puan Aisha, are you okay? Please choose a button.' : 'Your home companion is here for you.'}</p>
+        <h1 id="companion-heading">{checkInHeading}</h1>
+        <p>{checkInPrompt}</p>
         {isFall && ((phase === 'ready' && choice === null) || choice === 'timeout') && (
           <div className="companion-countdown"><p>Time remaining to respond</p>
             <div className="companion-countdown-number" role="timer" aria-label={`${seconds} seconds remaining`} aria-live="off">00:{String(seconds).padStart(2, '0')}</div>

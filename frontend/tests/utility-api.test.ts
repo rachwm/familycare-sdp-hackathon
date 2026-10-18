@@ -26,6 +26,8 @@ test('inactivity and utility simulator scenarios call the anomaly backend', asyn
       assert.equal(options?.method, 'POST');
       const body = JSON.parse(String(options?.body));
       assert.equal(body.resident_state, 'HOME');
+      assert.equal(body.simulation, true);
+      assert.equal(body.anomaly_kind, kind);
       if (kind === 'inactivity') assert.equal(body.inactivity_mins, 180);
       else assert.equal(body.water_lpm, 8.5);
       return json(anomaly);

@@ -3,6 +3,8 @@ export type IncidentStatus = 'awaiting_resident_response' | 'resolved' | 'reside
 
 export interface FallIncident {
   event_id: string;
+  event_type?: 'possible_fall' | 'unusual_activity';
+  anomaly_kind?: 'inactivity' | 'utility';
   status: IncidentStatus;
   timestamp: string;
   simulation: boolean;
@@ -78,7 +80,7 @@ export async function createFallSimulation(): Promise<FallIncident> {
 }
 
 export async function getFallIncident(eventId: string, signal?: AbortSignal): Promise<FallIncident> {
-  return readIncident(await request(`/api/fall-events/${encodeURIComponent(eventId)}`, undefined, signal));
+  return readIncident(await request(`/api/incidents/${encodeURIComponent(eventId)}`, undefined, signal));
 }
 
 export async function submitFallResponse(eventId: string, response: ResidentResponse, signal?: AbortSignal): Promise<FallIncident> {
@@ -86,7 +88,7 @@ export async function submitFallResponse(eventId: string, response: ResidentResp
   const current = await getFallIncident(eventId, signal);
   if (current.status !== 'awaiting_resident_response') return current;
   try {
-    const data = await request(`/api/fall-events/${encodeURIComponent(eventId)}/response`, { response }, signal);
+    const data = await request(`/api/incidents/${encodeURIComponent(eventId)}/response`, { response }, signal);
     if (!record(data) || data.accepted !== true) throw new FallApiError('The backend did not confirm your response.');
     const event = readIncident(data.event);
     if (event.status === 'awaiting_resident_response') throw new FallApiError('Your response has not been confirmed.');

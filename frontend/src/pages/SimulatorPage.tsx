@@ -62,12 +62,7 @@ export function SimulatorPage() {
           if (mountedRef.current) navigate(`/companion?reminderId=${encodeURIComponent(reminder.id)}`);
         } else {
           const anomaly = await createUtilitySimulation(scenario.id);
-          if (mountedRef.current) {
-            setSelected(scenario);
-            setBackendResult(
-              `Backend anomaly detected (${Math.round(anomaly.confidence * 100)}% confidence): ${anomaly.reason}`,
-            );
-          }
+          if (mountedRef.current) navigate(`/companion?eventId=${encodeURIComponent(anomaly.incident_id)}`);
         }
       } catch (error) {
         if (mountedRef.current) setApiError(error instanceof Error ? error.message : 'Could not start the simulation.');
@@ -127,7 +122,7 @@ export function SimulatorPage() {
           </div>
 
           <section className="simulator-panel" aria-label="Simulation controls" aria-busy={starting}>
-            <p className="simulator-notice">SIMULATION ONLY · Fall events and reminders are saved to the local backend</p>
+            <p className="simulator-notice">SIMULATION ONLY · Safety events and reminders are saved to the local backend</p>
             {apiError && <p role="alert">{apiError} Please check that the backend is running before trying again.</p>}
             <ul className="simulator-scenarios">
               {scenarios.map(scenario => (
@@ -162,7 +157,7 @@ export function SimulatorPage() {
             </section>
           )}
 
-          <p className="simulator-footer-note">Fall, inactivity and utility detection plus reminder display: connected backend · Preview acknowledgement buttons do not create additional incidents.</p>
+          <p className="simulator-footer-note">Fall, inactivity and utility detections create connected Home Companion check-ins and live family alerts.</p>
         </main>
       </div>
     </div>

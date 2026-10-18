@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -18,6 +20,7 @@ from backend.services.incident_manager import (
     InvalidIncidentTransitionError,
     incident_manager,
 )
+from backend.services.websocket_manager import manager
 
 
 router = APIRouter(
@@ -31,7 +34,7 @@ router = APIRouter(
     response_model=FallEventAccepted,
     status_code=status.HTTP_201_CREATED,
 )
-def create_fall_event(
+async def create_fall_event(
     event: FallEvent,
 ) -> FallEventAccepted:
     """Accept a possible-fall event from the detector."""
@@ -46,6 +49,14 @@ def create_fall_event(
             detail=str(error),
         ) from error
 
+    await manager.broadcast(
+        message_type="INCIDENT_CREATED",
+        data=(
+            stored_event.model_dump(mode="json")
+            if hasattr(stored_event, "model_dump")
+            else json.loads(stored_event.json())
+        ),
+    )
     return FallEventAccepted(
         accepted=True,
         message=(
@@ -87,7 +98,7 @@ def get_fall_event(
     "/{event_id}/response",
     response_model=ResidentResponseResult,
 )
-def submit_resident_response(
+async def submit_resident_response(
     event_id: str,
     response: ResidentResponseRequest,
 ) -> ResidentResponseResult:
@@ -127,6 +138,14 @@ def submit_resident_response(
         ),
     }
 
+    await manager.broadcast(
+        message_type="INCIDENT_UPDATED",
+        data=(
+            updated_event.model_dump(mode="json")
+            if hasattr(updated_event, "model_dump")
+            else json.loads(updated_event.json())
+        ),
+    )
     return ResidentResponseResult(
         accepted=True,
         action=response.response,

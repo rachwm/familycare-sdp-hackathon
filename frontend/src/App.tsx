@@ -13,6 +13,7 @@ import { Icon } from './components/Icon';
 import { scenarios, getScenario, incidentPath, type Scenario } from './data/mockData';
 import { LiveContext, type LiveState } from './data/liveContext';
 import { familyIncidents, fetchLiveIncidents } from './data/liveIncidents';
+import { useBackendEvents } from './data/backendEvents';
 import { HomePage } from './pages/HomePage';
 import { AlertsPage } from './pages/AlertsPage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -36,9 +37,14 @@ export default function App() {
     try { return sessionStorage.getItem(MODE_KEY) === 'live' ? 'live' : 'demo'; } catch { return 'demo'; }
   });
   const [live, setLive] = useState<Omit<LiveState, 'mode'>>({ incidents: [], loading: false, error: false });
+  const [liveRevision, setLiveRevision] = useState(0);
   const location = useLocation();
   const coordinatorRoute = location.pathname.startsWith('/coordinator');
   const responderRoute = /^\/responder\/?$/.test(location.pathname);
+  useBackendEvents(
+    () => setLiveRevision(value => value + 1),
+    mode === 'live' && !coordinatorRoute && !responderRoute,
+  );
   const [demo, setDemo] = useState(() => /^\/responder\/?$/.test(window.location.pathname) ? createResponderDemo() : createDemo(window.location.pathname.startsWith('/coordinator') ? 'requested' : initialScenario() === 'unusual' ? 'normal' : initialScenario() as Stage, window.location.pathname.startsWith('/coordinator') ? 'coordinator' : 'family'));
   const [unusual, setUnusual] = useState(initialScenario() === 'unusual' && !window.location.pathname.startsWith('/coordinator') && !/^\/responder\/?$/.test(window.location.pathname));
   const scenario: Scenario = unusual ? 'unusual' : familyScenario(demo);
@@ -55,13 +61,13 @@ export default function App() {
       } catch {
         if (active && !controller?.signal.aborted) setLive(current => ({ ...current, loading: false, error: true }));
       } finally {
-        if (active) timer = window.setTimeout(poll, 3000);
+        if (active) timer = window.setTimeout(poll, 15000);
       }
     };
     setLive(current => ({ ...current, loading: true, error: false }));
     void poll();
     return () => { active = false; controller?.abort(); window.clearTimeout(timer); };
-  }, [mode, coordinatorRoute, responderRoute]);
+  }, [mode, coordinatorRoute, responderRoute, liveRevision]);
   const dispatch = useCallback((action: Action) => { setUnusual(false); setDemo(current => ({ ...transition(current, action), source: 'coordinator' })); }, []);
   useEffect(() => {
     if (demo.source !== 'coordinator' || demo.escalated || unusual || responderRoute) return;
@@ -124,6 +130,6 @@ export default function App() {
       <BottomNav />
     </div>
     {mode === 'demo' && !unusual && demo.source !== 'family' && <aside className='family-coordinator-note' role='status'><strong>{demo.source === 'responder' ? 'Shared responder demo' : 'Shared coordinator demo'}</strong><p>{demo.escalated ? 'Incident escalated · support review pending' : demo.stage === 'matching' && !eligibleCandidate(demo) ? 'No suitable responder · coordinator action required' : demo.events.at(-1)?.title ?? 'Normal monitoring'}</p>{demo.source === 'responder' ? <Link to='/responder'>Return to Responder Dashboard →</Link> : <Link to='/coordinator'>Open Response Centre →</Link>}</aside>}
-    <aside className="demo-controls" aria-label="FamilyCare data mode"><label htmlFor="family-mode">Data mode</label><select id="family-mode" value={mode} onChange={event => changeMode(event.target.value as 'demo' | 'live')}><option value="demo">Demo Mode</option><option value="live">Live Mode</option></select>{mode === 'live' && <p>Live incidents · updates every 3 seconds</p>}{import.meta.env.DEV && <><label htmlFor="demo-scenario">Demo scenarios</label><select id="demo-scenario" value={scenario} disabled={mode === 'live'} onChange={event => changeScenario(event.target.value as Scenario)}>{scenarios.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select><p>16 October 2026 · Mock data only in Demo Mode</p><Link to="/coordinator">Open SDP Response Centre →</Link><span className="sr-only" role="status">Selected scenario: {state.label}</span></>}</aside>
+    <aside className="demo-controls" aria-label="FamilyCare data mode"><label htmlFor="family-mode">Data mode</label><select id="family-mode" value={mode} onChange={event => changeMode(event.target.value as 'demo' | 'live')}><option value="demo">Demo Mode</option><option value="live">Live Mode</option></select>{mode === 'live' && <p>Live incidents · real-time updates</p>}{import.meta.env.DEV && <><label htmlFor="demo-scenario">Demo scenarios</label><select id="demo-scenario" value={scenario} disabled={mode === 'live'} onChange={event => changeScenario(event.target.value as Scenario)}>{scenarios.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select><p>16 October 2026 · Mock data only in Demo Mode</p><Link to="/coordinator">Open SDP Response Centre →</Link><span className="sr-only" role="status">Selected scenario: {state.label}</span></>}</aside>
   </FamilyDemoContext.Provider></LiveContext.Provider>;
 }

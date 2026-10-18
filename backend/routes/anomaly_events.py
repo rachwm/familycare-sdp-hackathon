@@ -3,7 +3,13 @@ import uuid
 
 from fastapi import APIRouter
 
-from backend.models.events import IncidentResponse, UtilityPayload
+from backend.models.events import (
+    IncidentResponse,
+    RoutineAnomalyDetails,
+    RoutineAnomalyEvent,
+    UtilityPayload,
+)
+from backend.services.incident_manager import incident_manager
 from backend.services.websocket_manager import manager
 from utility_anomaly.anomaly_detector import UtilityAnomalyDetector
 
@@ -31,15 +37,47 @@ async def process_utility_event(
         resident_state=payload.resident_state,
     )
 
+    incident_id = str(uuid.uuid4())
     response = IncidentResponse(
-        incident_id=str(uuid.uuid4()),
+        incident_id=incident_id,
         **result,
     )
 
     if response.is_anomaly:
+        anomaly_kind = payload.anomaly_kind or (
+            "inactivity"
+            if payload.inactivity_mins >= 120
+            else "utility"
+        )
+        event = RoutineAnomalyEvent(
+            schema_version="1.0",
+            event_id=incident_id,
+            event_type="unusual_activity",
+            source="utility_anomaly_detector",
+            anomaly_kind=anomaly_kind,
+            resident_id=payload.resident_id,
+            location=payload.location,
+            severity="warning",
+            status="awaiting_resident_response",
+            confidence=response.confidence,
+            timestamp=response.timestamp,
+            requires_resident_check_in=True,
+            simulation=payload.simulation,
+            details=RoutineAnomalyDetails(
+                anomaly_kind=anomaly_kind,
+                reason=response.reason,
+                resident_state=response.resident_state,
+                metrics=response.metrics,
+            ),
+        )
+        stored_event = incident_manager.create_event(event)
         await manager.broadcast(
-            message_type="UTILITY_ANOMALY_ALERT",
-            data=response.dict()
+            message_type="INCIDENT_CREATED",
+            data=(
+                stored_event.model_dump(mode="json")
+                if hasattr(stored_event, "model_dump")
+                else stored_event.dict()
+            ),
         )
 
     return response

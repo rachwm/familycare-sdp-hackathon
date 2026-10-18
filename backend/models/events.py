@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Optional, Dict
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,10 @@ class UtilityPayload(BaseModel):
     inactivity_mins: float
     door_transitions_15m: int
     resident_state: str = "HOME"
+    resident_id: str = Field(default="resident-01", min_length=1, max_length=100)
+    location: str = Field(default="home", min_length=1, max_length=100)
+    simulation: bool = False
+    anomaly_kind: Literal["inactivity", "utility"] | None = None
 
 
 class IncidentResponse(BaseModel):
@@ -91,8 +95,8 @@ class FallEventDetails(BaseModel):
     evidence: dict[str, float | int]
 
 
-class FallEvent(BaseModel):
-    """Shared FamilyCare possible-fall event."""
+class CareIncident(BaseModel):
+    """State shared by every FamilyCare safety incident."""
 
     schema_version: Literal["1.0"]
 
@@ -100,9 +104,6 @@ class FallEvent(BaseModel):
         min_length=1,
         max_length=100,
     )
-
-    event_type: Literal["possible_fall"]
-    source: Literal["fall_detector"]
 
     resident_id: str = Field(
         min_length=1,
@@ -143,7 +144,33 @@ class FallEvent(BaseModel):
     responder_updates: dict[str, datetime] = Field(default_factory=dict)
     visit_report: dict[str, str] | None = None
 
+class FallEvent(CareIncident):
+    """Shared FamilyCare possible-fall event."""
+
+    event_type: Literal["possible_fall"]
+    source: Literal["fall_detector"]
     details: FallEventDetails
+
+
+class RoutineAnomalyDetails(BaseModel):
+    """Evidence attached to a utility or inactivity anomaly."""
+
+    anomaly_kind: Literal["inactivity", "utility"]
+    reason: str
+    resident_state: str
+    metrics: dict[str, Any]
+
+
+class RoutineAnomalyEvent(CareIncident):
+    """An unusual routine or utility pattern requiring a check-in."""
+
+    event_type: Literal["unusual_activity"]
+    source: Literal["utility_anomaly_detector"]
+    anomaly_kind: Literal["inactivity", "utility"]
+    details: RoutineAnomalyDetails
+
+
+SafetyEvent = FallEvent | RoutineAnomalyEvent
 
 
 class FallEventAccepted(BaseModel):
@@ -167,7 +194,7 @@ class ResidentResponseResult(BaseModel):
     accepted: bool
     action: ResidentResponseType
     message: str
-    event: FallEvent
+    event: SafetyEvent
 
 
 class IncidentActionRequest(BaseModel):
@@ -183,7 +210,8 @@ class IncidentActionResult(BaseModel):
     accepted: bool
     action: IncidentActionType
     message: str
-    event: FallEvent
+    event: SafetyEvent
+
 
 class AssignResponderRequest(BaseModel):
     responder_id: str = Field(min_length=1)

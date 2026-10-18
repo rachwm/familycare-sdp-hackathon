@@ -8,10 +8,12 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from backend.models.events import (
     AssignResponderRequest,
-    FallEvent,
     IncidentActionRequest,
     IncidentActionResult,
     IncidentStatus,
+    ResidentResponseRequest,
+    ResidentResponseResult,
+    SafetyEvent,
     UpdateResponderStatusRequest,
     VisitReportRequest,
 )
@@ -28,16 +30,24 @@ router = APIRouter(
 )
 
 
+def _event_data(event: SafetyEvent) -> dict:
+    return (
+        event.model_dump(mode="json")
+        if hasattr(event, "model_dump")
+        else json.loads(event.json())
+    )
+
+
 @router.get(
     "",
-    response_model=list[FallEvent],
+    response_model=list[SafetyEvent],
 )
 def list_incidents(
     incident_status: IncidentStatus | None = Query(
         default=None,
         alias="status",
     ),
-) -> list[FallEvent]:
+) -> list[SafetyEvent]:
     """Return all incidents, optionally filtered by current status."""
 
     events = incident_manager.list_events()
@@ -53,9 +63,9 @@ def list_incidents(
 
 @router.get(
     "/{event_id}",
-    response_model=FallEvent,
+    response_model=SafetyEvent,
 )
-def get_incident_status(event_id: str) -> FallEvent:
+def get_incident_status(event_id: str) -> SafetyEvent:
     """Return the current state of one incident."""
 
     try:
@@ -68,10 +78,53 @@ def get_incident_status(event_id: str) -> FallEvent:
 
 
 @router.post(
+    "/{event_id}/response",
+    response_model=ResidentResponseResult,
+)
+async def submit_incident_response(
+    event_id: str,
+    response: ResidentResponseRequest,
+) -> ResidentResponseResult:
+    """Apply a Home Companion response to any check-in incident."""
+
+    try:
+        updated_event = incident_manager.apply_resident_response(
+            event_id=event_id,
+            response=response,
+        )
+    except IncidentNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except InvalidIncidentTransitionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    messages = {
+        "resident_okay": "Resident confirmed they are okay. The incident has been resolved.",
+        "resident_needs_help": "Resident requested help. The incident has been escalated.",
+        "timeout": "Resident did not respond. The incident has been escalated.",
+    }
+    await manager.broadcast(
+        message_type="INCIDENT_UPDATED",
+        data=_event_data(updated_event),
+    )
+    return ResidentResponseResult(
+        accepted=True,
+        action=response.response,
+        message=messages[response.response],
+        event=updated_event,
+    )
+
+
+@router.post(
     "/{event_id}/actions",
     response_model=IncidentActionResult,
 )
-def apply_incident_action(
+async def apply_incident_action(
     event_id: str,
     request: IncidentActionRequest,
 ) -> IncidentActionResult:
@@ -100,6 +153,10 @@ def apply_incident_action(
         "resolve": "The incident has been resolved.",
     }
 
+    await manager.broadcast(
+        message_type="INCIDENT_UPDATED",
+        data=_event_data(updated_event),
+    )
     return IncidentActionResult(
         accepted=True,
         action=request.action,
@@ -115,7 +172,7 @@ async def responder_change(event_id, kind, payload, message_type):
         raise HTTPException(status_code=404, detail=str(error)) from error
     except InvalidIncidentTransitionError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
-    data = event.model_dump(mode="json") if hasattr(event, "model_dump") else json.loads(event.json())
+    data = _event_data(event)
     if kind == "assign":
         data["incident_status"] = data["status"]
         data["status"] = "assigned"

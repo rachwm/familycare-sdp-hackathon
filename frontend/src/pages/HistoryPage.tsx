@@ -29,7 +29,7 @@ export function HistoryPage({ scenario }: { scenario: Scenario }) {
       <Filters options={filters} selected={filter} onSelect={setFilter} label="Filter history" />
       <div aria-live="polite"><LiveNotice empty={!live.incidents.length && !live.loading && !live.error} />
         {[...byDate].map(([date, incidents]) => <section className="history-group" key={date}><h2>{date}</h2><div className="activity-list">{incidents.map(incident => <ActivityCard key={incident.event_id} activity={toLiveActivity(incident)} expanded showDay={false} />)}</div></section>)}
-        {!byDate.size && live.incidents.length > 0 && <div className="empty-state"><h2>No recorded activities</h2><p>No activities match this filter. Live Mode currently shows fall incidents only.</p></div>}
+        {!byDate.size && live.incidents.length > 0 && <div className="empty-state"><h2>No recorded activities</h2><p>No live activities match this filter.</p></div>}
       </div></>;
   }
   return <>

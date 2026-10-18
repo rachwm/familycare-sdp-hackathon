@@ -40,7 +40,7 @@ test('okay, help and timeout use the resident-response endpoint and exact respon
   for (const response of ['resident_okay', 'resident_needs_help', 'timeout'] as const) {
     globalThis.fetch = async (input, options) => {
       if (options?.method === 'GET') return json(pending);
-      assert.equal(new URL(String(input)).pathname, '/api/fall-events/fall-test/response');
+      assert.equal(new URL(String(input)).pathname, '/api/incidents/fall-test/response');
       assert.deepEqual(JSON.parse(String(options?.body)), { response });
       const event = response === 'resident_okay' ? okay : response === 'resident_needs_help' ? help : { ...help, status: 'no_response', resident_response: 'timeout' };
       return json({ accepted: true, event });

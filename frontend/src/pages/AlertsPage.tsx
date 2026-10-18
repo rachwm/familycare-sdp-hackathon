@@ -24,7 +24,10 @@ export function AlertsPage({ scenario }: { scenario: Scenario }) {
     { title: 'Resolved alerts', alerts: filtered.filter(alert => alert.resolved) },
   ];
   if (live.mode === 'live') {
-    const filteredIncidents = filter === 'Unusual Activity' ? [] : live.incidents;
+    const filteredIncidents = live.incidents.filter(incident =>
+      filter === 'All'
+      || (filter === 'Falls' && incident.event_type === 'possible_fall')
+      || (filter === 'Unusual Activity' && incident.event_type === 'unusual_activity'));
     const active = filteredIncidents.filter(incident => incident.status !== 'resolved');
     const resolved = filteredIncidents.filter(incident => incident.status === 'resolved');
     return <><PageHeading title="Alerts" subtitle="Stay informed about important updates for your loved ones." />
@@ -32,7 +35,7 @@ export function AlertsPage({ scenario }: { scenario: Scenario }) {
       <div className="activity-list alerts-list" aria-live="polite"><LiveNotice empty={!live.incidents.length && !live.loading && !live.error} />
         {filteredIncidents.length > 0 && !active.length && <p className="alerts-clear"><Icon name="check" />No active safety alerts</p>}
         {[{ title: 'Active alerts', items: active }, { title: 'Resolved alerts', items: resolved }].map(group => group.items.length > 0 && <section className="alerts-group" key={group.title} aria-label={group.title}><h2>{group.title}</h2><div className="activity-list">{group.items.map(incident => <ActivityCard key={incident.event_id} activity={toLiveActivity(incident)} statusIcon={incident.status === 'resolved' ? 'check' : 'clock'} timeLabel={displayDate(incident.timestamp)} showDay={false} expanded />)}</div></section>)}
-        {!filteredIncidents.length && live.incidents.length > 0 && <div className="empty-state"><h2>No unusual activity alerts</h2><p>The live API currently provides fall incidents only.</p></div>}
+        {!filteredIncidents.length && live.incidents.length > 0 && <div className="empty-state"><h2>No matching safety alerts</h2><p>No live incidents match this filter.</p></div>}
       </div></>;
   }
   return <>
