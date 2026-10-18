@@ -1,0 +1,18 @@
+[
+  {
+    "timestamp": "2026-10-17 08:30:00",
+    "power_kw": 1.2,
+    "water_lpm": 4.5,
+    "inactivity_mins": 5,
+    "door_transitions_15m": 6,
+    "resident_state": "HOME"
+  },
+  {
+    "timestamp": "2026-10-17 10:30:00",
+    "power_kw": 0.1,
+    "water_lpm": 0.0,
+    "inactivity_mins": 180,
+    "door_transitions_15m": 0,
+    "resident_state": "HOME"
+  }
+]

@@ -14,6 +14,9 @@ from backend.models.events import (
     IncidentActionRequest,
     IncidentActionResult,
     IncidentStatus,
+    AssignResponderRequest,
+    UpdateResponderStatusRequest,
+    VisitReportRequest
 )
 from backend.services.incident_manager import (
     IncidentNotFoundError,
@@ -22,6 +25,7 @@ from backend.services.incident_manager import (
 )
 from backend.services.websocket_manager import manager
 
+from backend.services.websocket_manager import manager
 
 router = APIRouter(
     prefix="/api/incidents",
