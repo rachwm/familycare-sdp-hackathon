@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.routes.reminders import active_reminders
+from backend.models.events import Reminder
 from backend.services.incident_manager import incident_manager
 
 
@@ -89,3 +91,31 @@ def test_invalid_simulator_scenario_is_rejected():
     )
 
     assert response.status_code == 422
+
+
+def test_demo_reset_clears_incidents_and_reminders():
+    incident = client.post(
+        "/api/simulator/fall",
+        json={"scenario": "fall"},
+    )
+    assert incident.status_code == 200
+    active_reminders.clear()
+    active_reminders.append(
+        Reminder(
+            id="demo-reminder",
+            time="12:00",
+            message="Demo medication reminder",
+            type="medication",
+        )
+    )
+
+    response = client.post("/api/simulator/reset", json={})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "reset",
+        "incidents_cleared": 1,
+        "reminders_cleared": 1,
+    }
+    assert incident_manager.list_events() == []
+    assert active_reminders == []

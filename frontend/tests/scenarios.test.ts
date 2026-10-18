@@ -42,7 +42,7 @@ test('Alerts contains safety incidents only and Normal has no alerts', () => {
     const alerts = getSafetyAlerts(state.id);
     assert.equal(alerts.length, state.id === 'normal' ? 0 : 1);
     assert.ok(alerts.every(alert => alert.category === 'incident'));
-    assert.ok(alerts.every(alert => ['Possible fall detected', 'Unusual activity detected'].includes(alert.title)));
+    assert.ok(alerts.every(alert => ['Possible fall detected', 'Activity anomaly detected'].includes(alert.title)));
     // Routine records remain available to Home and History in every scenario.
     const records = getTodayActivities(state.id);
     for (const id of ['check-in', 'medication', 'connected']) assert.ok(records.some(record => record.id === id));
@@ -50,12 +50,12 @@ test('Alerts contains safety incidents only and Normal has no alerts', () => {
 });
 
 test('all three safety filters return the appropriate incident type', () => {
-  assert.deepEqual([...safetyAlertFilters], ['All', 'Falls', 'Unusual Activity']);
+  assert.deepEqual([...safetyAlertFilters], ['All', 'Falls', 'Activity Anomaly']);
   for (const state of scenarios) {
     const hasIncident = state.id !== 'normal';
     assert.equal(getSafetyAlerts(state.id, 'All').length, hasIncident ? 1 : 0);
     assert.equal(getSafetyAlerts(state.id, 'Falls').length, hasIncident && state.id !== 'unusual' ? 1 : 0);
-    assert.equal(getSafetyAlerts(state.id, 'Unusual Activity').length, state.id === 'unusual' ? 1 : 0);
+    assert.equal(getSafetyAlerts(state.id, 'Activity Anomaly').length, state.id === 'unusual' ? 1 : 0);
   }
 });
 

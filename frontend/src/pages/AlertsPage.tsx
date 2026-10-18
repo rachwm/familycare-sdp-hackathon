@@ -27,7 +27,7 @@ export function AlertsPage({ scenario }: { scenario: Scenario }) {
     const filteredIncidents = live.incidents.filter(incident =>
       filter === 'All'
       || (filter === 'Falls' && incident.event_type === 'possible_fall')
-      || (filter === 'Unusual Activity' && incident.event_type === 'unusual_activity'));
+      || (filter === 'Activity Anomaly' && incident.event_type === 'unusual_activity'));
     const active = filteredIncidents.filter(incident => incident.status !== 'resolved');
     const resolved = filteredIncidents.filter(incident => incident.status === 'resolved');
     return <><PageHeading title="Alerts" subtitle="Stay informed about important updates for your loved ones." />
@@ -48,7 +48,7 @@ export function AlertsPage({ scenario }: { scenario: Scenario }) {
         <div className="activity-list">{group.alerts.map(activity => <ActivityCard key={activity.id} activity={activity} statusIcon={activity.statusIcon} timeLabel="Detected" expanded />)}</div>
       </section>)}
       {!filtered.length && <div className="empty-state">
-        <h2>{alerts.length ? `No ${filter === 'Falls' ? 'fall' : 'unusual activity'} alerts` : 'No safety alerts'}</h2>
+        <h2>{alerts.length ? `No ${filter === 'Falls' ? 'fall' : 'activity anomaly'} alerts` : 'No safety alerts'}</h2>
         <p>{alerts.length ? 'No safety incidents match this filter.' : "Everything looks good at Puan Aisha's home. You'll be notified if FamilyCare detects something unusual."}</p>
       </div>}
     </div>

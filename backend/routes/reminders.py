@@ -58,6 +58,15 @@ def _save_reminders() -> None:
 active_reminders: list[Reminder] = _load_reminders()
 
 
+def clear_reminders() -> int:
+    """Remove all saved prototype reminders and return the number cleared."""
+
+    cleared = len(active_reminders)
+    active_reminders.clear()
+    _save_reminders()
+    return cleared
+
+
 @router.post("/reminders", response_model=Reminder)
 async def create_reminder(reminder: Reminder) -> Reminder:
     reminder.id = str(uuid.uuid4())

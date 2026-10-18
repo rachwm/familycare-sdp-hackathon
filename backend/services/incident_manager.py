@@ -117,6 +117,14 @@ class IncidentManager:
     def list_events(self) -> list[SafetyEvent]:
         return list(self._events.values())
 
+    def clear_events(self) -> int:
+        """Remove all saved prototype incidents and return the number cleared."""
+
+        cleared = len(self._events)
+        self._events.clear()
+        self._save_events()
+        return cleared
+
     def get_event(
         self,
         event_id: str,

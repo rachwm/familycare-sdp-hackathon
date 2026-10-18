@@ -46,7 +46,7 @@ test('Family Dashboard only displays the linked resident’s incidents', () => {
   assert.deepEqual(familyIncidents([{ ...base, resident_id: 'resident-02' }, base]), [base]);
 });
 
-test('routine anomalies remain distinct from falls in live activity', async () => {
+test('activity anomalies remain distinct from falls in live activity', async () => {
   const anomaly: LiveIncident = {
     ...base,
     event_id: 'routine-001',
@@ -57,5 +57,5 @@ test('routine anomalies remain distinct from falls in live activity', async () =
   const request = async () => ({ ok: true, json: async () => [anomaly] }) as Response;
   const [saved] = await fetchLiveIncidents(undefined, request as typeof fetch);
   assert.equal(saved.event_type, 'unusual_activity');
-  assert.equal(toLiveActivity(saved).title, 'Unusual inactivity detected');
+  assert.equal(toLiveActivity(saved).title, 'Activity anomaly detected');
 });

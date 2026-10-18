@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../components/Brand';
 import { useBackendEvents } from '../data/backendEvents';
 import { MedicationCompanion } from './MedicationCompanion';
@@ -176,9 +176,7 @@ function CompanionSession({ search }: { search: string }) {
   const checkInHeading = !connected
     ? (isFall ? 'A possible fall was detected' : 'Good morning, Puan Aisha')
     : incident?.event_type === 'unusual_activity'
-      ? incident.anomaly_kind === 'utility'
-        ? 'Unusual home activity was detected'
-        : 'Your usual activity was not detected'
+      ? 'Activity anomaly detected'
       : incident?.event_type === 'possible_fall'
         ? 'A possible fall was detected'
         : 'Loading your safety check-in';
@@ -227,6 +225,9 @@ function CompanionSession({ search }: { search: string }) {
             <p>{requestError}</p>
             <button type="button" className="companion-button companion-button--okay" onClick={() => choice ? setSendAttempt(value => value + 1) : setLoadAttempt(value => value + 1)}>{choice ? 'Retry response' : 'Retry loading check-in'}</button>
           </div>
+        )}
+        {(phase === 'complete' || (!connected && choice !== null)) && (
+          <Link className="companion-home-link" to="/">Back to FamilyCare Home</Link>
         )}
       </section>
     </div>

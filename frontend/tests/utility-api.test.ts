@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { createUtilitySimulation } from '../src/pages/utilityApi.ts';
+import { createActivityAnomalySimulation } from '../src/pages/activityApi.ts';
 
 const originalFetch = globalThis.fetch;
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
@@ -19,26 +19,26 @@ const anomaly = {
   resident_state: 'HOME',
 };
 
-test('inactivity and utility simulator scenarios call the anomaly backend', async () => {
-  for (const kind of ['inactivity', 'utility'] as const) {
-    globalThis.fetch = async (input, options) => {
-      assert.equal(new URL(String(input)).pathname, '/utility-anomaly');
-      assert.equal(options?.method, 'POST');
-      const body = JSON.parse(String(options?.body));
-      assert.equal(body.resident_state, 'HOME');
-      assert.equal(body.simulation, true);
-      assert.equal(body.anomaly_kind, kind);
-      if (kind === 'inactivity') assert.equal(body.inactivity_mins, 180);
-      else assert.equal(body.water_lpm, 8.5);
-      return json(anomaly);
-    };
-    assert.equal((await createUtilitySimulation(kind)).is_anomaly, true);
-  }
+test('the unified activity anomaly sends combined home-sensor evidence', async () => {
+  globalThis.fetch = async (input, options) => {
+    assert.equal(new URL(String(input), 'http://local.test').pathname, '/utility-anomaly');
+    assert.equal(options?.method, 'POST');
+    const body = JSON.parse(String(options?.body));
+    assert.equal(body.resident_state, 'HOME');
+    assert.equal(body.simulation, true);
+    assert.equal(body.inactivity_mins, 180);
+    assert.equal(typeof body.power_kw, 'number');
+    assert.equal(typeof body.water_lpm, 'number');
+    assert.equal(typeof body.door_transitions_15m, 'number');
+    assert.equal('anomaly_kind' in body, false);
+    return json(anomaly);
+  };
+  assert.equal((await createActivityAnomalySimulation()).is_anomaly, true);
 });
 
 test('simulator rejects normal or malformed anomaly responses', async () => {
   globalThis.fetch = async () => json({ ...anomaly, is_anomaly: false });
-  await assert.rejects(createUtilitySimulation('utility'), /did not classify/);
+  await assert.rejects(createActivityAnomalySimulation(), /did not classify/);
   globalThis.fetch = async () => json({ incident_id: 'bad' });
-  await assert.rejects(createUtilitySimulation('inactivity'), /unexpected anomaly result/);
+  await assert.rejects(createActivityAnomalySimulation(), /unexpected activity-anomaly result/);
 });

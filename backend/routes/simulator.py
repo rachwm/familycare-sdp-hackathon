@@ -11,7 +11,9 @@ from backend.models.simulator import (
     FallSimulationRequest,
     FallSimulationResponse,
 )
+from backend.routes.reminders import clear_reminders
 from backend.services.incident_manager import incident_manager
+from backend.services.reminder_scheduler import clear_delivered_reminders
 from backend.services.websocket_manager import manager
 from fall_detection.fall_simulator import simulate_scenario
 
@@ -20,6 +22,25 @@ router = APIRouter(
     prefix="/api/simulator",
     tags=["Sensor simulator"],
 )
+
+
+@router.post("/reset")
+async def reset_demo_data() -> dict[str, int | str]:
+    """Clear locally saved incidents and reminders before a demo run."""
+
+    incidents_cleared = incident_manager.clear_events()
+    reminders_cleared = clear_reminders()
+    clear_delivered_reminders()
+    result: dict[str, int | str] = {
+        "status": "reset",
+        "incidents_cleared": incidents_cleared,
+        "reminders_cleared": reminders_cleared,
+    }
+    await manager.broadcast(
+        message_type="DEMO_DATA_RESET",
+        data=result,
+    )
+    return result
 
 
 @router.post(

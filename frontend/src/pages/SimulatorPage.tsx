@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import './SimulatorPage.css';
 import { createFallSimulation } from './fallApi';
 import { createMedicationReminder } from './reminderApi';
-import { createUtilitySimulation } from './utilityApi';
+import { createActivityAnomalySimulation } from './activityApi';
+import { resetDemoData } from './simulatorApi';
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}simulator/${name}`;
 
 const scenarios = [
   { id: 'fall', title: 'Fall detection', description: 'Start the 30-second safety check-in.', icon: 'fall.svg', prompt: '', actions: [] },
-  { id: 'inactivity', title: 'Inactivity', description: 'Check in when morning activity is missing.', icon: 'inactivity.svg', prompt: 'Puan Aisha, we have not noticed your usual morning activity. Are you okay?', actions: ['I’m okay', 'I need help'] },
-  { id: 'utility', title: 'Utility anomaly', description: 'Test an unusual electricity or water pattern.', icon: 'utility.svg', prompt: 'Sample alert: water use is higher than the usual pattern. This is simulated data.', actions: ['Acknowledge alert'] },
+  { id: 'activity', title: 'Activity anomaly', description: 'Test a routine change detected from home sensor patterns.', icon: 'activity.svg', prompt: '', actions: [] },
   { id: 'medication', title: 'Medication reminder', description: 'Create and display a saved medication reminder.', icon: 'medication.svg', prompt: 'This is a practice medication reminder. Please choose a response.', actions: ['Acknowledge reminder', 'Snooze reminder', 'I need help'] },
   { id: 'connection', title: 'Connection error', description: 'Test a failed response and retry.', icon: 'connection.svg', prompt: 'Practice error: the response could not be sent. Try again.', actions: ['Retry'] },
 ] as const;
@@ -25,6 +25,9 @@ export function SimulatorPage() {
   const [starting, setStarting] = useState(false);
   const [startingScenario, setStartingScenario] = useState<string | null>(null);
   const [apiError, setApiError] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
   const busyRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -46,8 +49,7 @@ export function SimulatorPage() {
     if (
       scenario.id === 'fall' ||
       scenario.id === 'medication' ||
-      scenario.id === 'inactivity' ||
-      scenario.id === 'utility'
+      scenario.id === 'activity'
     ) {
       busyRef.current = true;
       setStarting(true);
@@ -61,7 +63,7 @@ export function SimulatorPage() {
           const reminder = await createMedicationReminder();
           if (mountedRef.current) navigate(`/companion?reminderId=${encodeURIComponent(reminder.id)}`);
         } else {
-          const anomaly = await createUtilitySimulation(scenario.id);
+          const anomaly = await createActivityAnomalySimulation();
           if (mountedRef.current) navigate(`/companion?eventId=${encodeURIComponent(anomaly.incident_id)}`);
         }
       } catch (error) {
@@ -82,6 +84,31 @@ export function SimulatorPage() {
       setResult('Snooze selected in this preview. A later reminder has not been scheduled.');
     } else {
       setResult(`You selected “${action}”. This practice response was not sent.`);
+    }
+  }
+
+  async function resetAllDemoData() {
+    if (busyRef.current || resetting) return;
+    const confirmed = window.confirm(
+      'Clear every saved demo incident and medication reminder? This cannot be undone.',
+    );
+    if (!confirmed) return;
+    setResetting(true);
+    setResetMessage('');
+    setResetError('');
+    try {
+      const cleared = await resetDemoData();
+      if (!mountedRef.current) return;
+      setSelected(null);
+      setResult('');
+      setBackendResult('');
+      setResetMessage(
+        `Demo ready: cleared ${cleared.incidents_cleared} incident${cleared.incidents_cleared === 1 ? '' : 's'} and ${cleared.reminders_cleared} reminder${cleared.reminders_cleared === 1 ? '' : 's'}.`,
+      );
+    } catch (error) {
+      if (mountedRef.current) setResetError(error instanceof Error ? error.message : 'Could not reset demo data.');
+    } finally {
+      if (mountedRef.current) setResetting(false);
     }
   }
 
@@ -142,6 +169,18 @@ export function SimulatorPage() {
             </ul>
           </section>
 
+          <section className="simulator-demo-tools" aria-labelledby="demo-tools-title">
+            <div>
+              <h2 id="demo-tools-title">Final demo controls</h2>
+              <p>Clear saved practice incidents and reminders before recording the final demonstration.</p>
+            </div>
+            <button className="simulator-reset-data" type="button" disabled={starting || resetting} onClick={() => { void resetAllDemoData(); }}>
+              {resetting ? 'Resetting…' : 'Reset Demo Data'}
+            </button>
+            {resetMessage && <p className="simulator-reset-message" role="status">{resetMessage}</p>}
+            {resetError && <p className="simulator-reset-error" role="alert">{resetError}</p>}
+          </section>
+
           {selected && (
             <section className="simulator-preview" aria-labelledby="simulator-preview-title">
               <h2 ref={previewHeading} tabIndex={-1} id="simulator-preview-title">{selected.title} · Practice preview</h2>
@@ -157,7 +196,7 @@ export function SimulatorPage() {
             </section>
           )}
 
-          <p className="simulator-footer-note">Fall, inactivity and utility detections create connected Home Companion check-ins and live family alerts.</p>
+          <p className="simulator-footer-note">Fall and activity-anomaly detections create connected Home Companion check-ins and live family alerts.</p>
         </main>
       </div>
     </div>

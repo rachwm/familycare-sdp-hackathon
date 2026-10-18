@@ -100,7 +100,7 @@ export function MedicationCompanion({ reminderId }: { reminderId: string }) {
           </div>
           <div className="companion-feedback" role="status" aria-live="polite" aria-atomic="true">{outcome && <p>{responses[outcome]}</p>}</div>
         </>}
-        <div className="companion-actions"><button type="button" className="companion-button companion-button--okay" onClick={() => navigate('/simulator')}>Back to simulator</button></div>
+        <div className="companion-actions"><button type="button" className="companion-button companion-button--okay" onClick={() => navigate('/')}>Back to FamilyCare Home</button></div>
       </section>
     </div>
   );

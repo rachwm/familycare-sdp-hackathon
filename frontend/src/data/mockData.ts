@@ -32,7 +32,7 @@ export interface ScenarioConfig {
 export const scenarios: ScenarioConfig[] = [
   { id: 'normal', label: 'Normal monitoring', status: 'Safe', description: 'Everything looks good at Puan Aisha’s home.', time: 'Last updated just now', tone: 'green', icon: 'check', stage: -1 },
   { id: 'fall', label: 'Possible fall detected', status: 'Possible Fall Detected', description: 'Puan Aisha hasn’t responded. We’re still waiting for a response.', time: '10:32 AM', tone: 'red', icon: 'alert', stage: 1 },
-  { id: 'unusual', label: 'Unusual activity detected', status: 'Unusual Activity Detected', description: 'Unusual activity was detected at Puan Aisha’s home.', time: '2:18 PM', tone: 'orange', icon: 'home', stage: 1 },
+  { id: 'unusual', label: 'Activity anomaly detected', status: 'Activity Anomaly Detected', description: 'An activity anomaly was detected at Puan Aisha’s home.', time: '2:18 PM', tone: 'orange', icon: 'home', stage: 1 },
   { id: 'requested', label: 'Assistance requested', status: 'Assistance Requested', description: 'No response after 15 minutes. Assistance has been requested.', time: '10:47 AM', tone: 'orange', icon: 'people', stage: 2 },
   { id: 'assigned', label: 'Responder assigned', status: 'Responder Assigned', description: 'Daniel Lim has been assigned to assist Puan Aisha.', time: '10:48 AM', tone: 'orange', icon: 'profile', stage: 3 },
   { id: 'on-way', label: 'Responder on the way', status: 'Responder on the way', description: 'Daniel Lim is travelling to Puan Aisha’s home.', time: '10:50 AM', tone: 'blue', icon: 'car', stage: 4 },
@@ -63,7 +63,7 @@ export const fallEvents: Activity[] = [
   { id: 'visit-completed', title: 'Visit completed', description: 'The visit is complete. No further action is required in this demonstration.', time: '11:20 AM', minutes: 680, icon: 'history', tone: 'green' },
 ].map(event => ({ ...event, date: 'today', category: 'incident', incidentId: FALL_ID }) as Activity);
 export const unusualEvents: Activity[] = [
-  { id: 'unusual-detected', title: 'Unusual activity detected', description: 'No movement detected for 4 hours at Puan Aisha’s home.', time: '2:18 PM', minutes: 858, date: 'today', icon: 'home', tone: 'orange', category: 'incident', incidentId: UNUSUAL_ID, status: 'Checking on Puan Aisha' },
+  { id: 'unusual-detected', title: 'Activity anomaly detected', description: 'The home sensor pattern changed from Puan Aisha’s usual routine.', time: '2:18 PM', minutes: 858, date: 'today', icon: 'home', tone: 'orange', category: 'incident', incidentId: UNUSUAL_ID, status: 'Checking on Puan Aisha' },
   { id: 'unusual-check-in', title: 'Resident check-in started', description: 'We’re checking on Puan Aisha’s wellbeing.', time: '2:18 PM', minutes: 858, date: 'today', icon: 'hourglass', tone: 'muted', category: 'incident', incidentId: UNUSUAL_ID },
 ];
 export function getIncidentEvents(scenario: Scenario): Activity[] {

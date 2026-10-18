@@ -23,7 +23,7 @@ const json = (value: unknown, status = 200) => new Response(JSON.stringify(value
 
 test('fall simulator sends the agreed payload and uses the returned event ID', async () => {
   globalThis.fetch = async (input, options) => {
-    assert.equal(new URL(String(input)).pathname, '/api/simulator/fall');
+    assert.equal(new URL(String(input), 'http://local.test').pathname, '/api/simulator/fall');
     assert.equal(options?.method, 'POST');
     assert.deepEqual(JSON.parse(String(options?.body)), { scenario: 'fall', resident_id: 'resident-01', location: 'living_room' });
     return json({ event_created: true, event: pending });
@@ -40,7 +40,7 @@ test('okay, help and timeout use the resident-response endpoint and exact respon
   for (const response of ['resident_okay', 'resident_needs_help', 'timeout'] as const) {
     globalThis.fetch = async (input, options) => {
       if (options?.method === 'GET') return json(pending);
-      assert.equal(new URL(String(input)).pathname, '/api/incidents/fall-test/response');
+      assert.equal(new URL(String(input), 'http://local.test').pathname, '/api/incidents/fall-test/response');
       assert.deepEqual(JSON.parse(String(options?.body)), { response });
       const event = response === 'resident_okay' ? okay : response === 'resident_needs_help' ? help : { ...help, status: 'no_response', resident_response: 'timeout' };
       return json({ accepted: true, event });

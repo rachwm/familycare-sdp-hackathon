@@ -1,7 +1,7 @@
 import { FALL_ID, UNUSUAL_ID, getIncidentEvents, getScenario, type Activity, type Scenario } from './mockData.ts';
 import type { IconName } from '../components/Icon';
 
-export const safetyAlertFilters = ['All', 'Falls', 'Unusual Activity'] as const;
+export const safetyAlertFilters = ['All', 'Falls', 'Activity Anomaly'] as const;
 export type SafetyAlertFilter = typeof safetyAlertFilters[number];
 export interface SafetyAlert extends Activity { statusIcon: IconName; resolved: boolean }
 

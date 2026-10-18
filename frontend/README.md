@@ -4,7 +4,7 @@ React, TypeScript, Vite and React Router. The approved screenshots in
 `designs/family-dashboard/` are the visual references. Demo Mode uses mock data;
 Live Mode reads fall incidents from the existing FastAPI endpoint.
 
-## Run on your Mac
+## Run locally
 
 Install Node.js 22.12 or newer, then from the repository:
 
@@ -20,10 +20,10 @@ The included pnpm lockfile records the validated dependency versions.
 
 ## Test Live Mode
 
-Start the FastAPI backend from the repository root in one terminal:
+Start the FastAPI backend from the repository root in one terminal on Windows:
 
-```sh
-python3 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 In another terminal, run `npm run dev` from `frontend/`, open the Vite URL,
@@ -45,10 +45,12 @@ not claim that a responder was assigned, arrived, or completed a visit.
 
 ## Open on your phone
 
-Connect the phone and Mac to the same Wi-Fi. Keep the server running and open
-Vite's **Network** URL in Safari or Chrome, for example `http://192.168.0.211:5173`.
-Use the address and port printed by your server; they can change. Allow Node
-through the macOS firewall if prompted. Localhost on a phone points to the phone.
+Connect the phone and computer to the same Wi-Fi. Keep both terminals running
+and open Vite's **Network** URL in Safari or Chrome, for example
+`http://192.168.0.211:5173`. Use the address and port printed by Vite; they can
+change. On Windows, allow Node.js through Windows Defender Firewall for private
+networks if prompted. Localhost on a phone points to the phone, so do not open
+the Local URL there.
 
 ## Pages and navigation
 

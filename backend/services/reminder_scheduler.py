@@ -9,6 +9,12 @@ from backend.services.websocket_manager import manager
 _delivered_occurrences: set[tuple[str, str, str]] = set()
 
 
+def clear_delivered_reminders() -> None:
+    """Forget reminder deliveries when the demonstration data is reset."""
+
+    _delivered_occurrences.clear()
+
+
 async def broadcast_due_reminders(
     now: datetime | None = None,
 ) -> list[str]:

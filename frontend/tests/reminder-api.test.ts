@@ -16,7 +16,7 @@ const json = (value: unknown, status = 200) => new Response(JSON.stringify(value
 
 test('medication simulation creates the agreed reminder payload and uses the server ID', async () => {
   globalThis.fetch = async (input, options) => {
-    assert.equal(new URL(String(input)).pathname, '/reminders');
+    assert.equal(new URL(String(input), 'http://local.test').pathname, '/reminders');
     assert.equal(options?.method, 'POST');
     const body = JSON.parse(String(options?.body));
     assert.equal(body.id, '');
@@ -30,7 +30,7 @@ test('medication simulation creates the agreed reminder payload and uses the ser
 
 test('Companion loads the matching reminder, not the first record in the list', async () => {
   globalThis.fetch = async (input, options) => {
-    assert.equal(new URL(String(input)).pathname, '/reminders');
+    assert.equal(new URL(String(input), 'http://local.test').pathname, '/reminders');
     assert.equal(options?.method, 'GET');
     return json([{ ...reminder, id: 'different-id', message: 'Different reminder.' }, reminder]);
   };

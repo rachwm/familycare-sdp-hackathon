@@ -69,9 +69,7 @@ export function displayTime(timestamp: string) {
 export function toLiveActivity(incident: LiveIncident): Activity {
   const title = incident.event_type === 'possible_fall'
     ? 'Possible fall detected'
-    : incident.anomaly_kind === 'utility'
-      ? 'Unusual utility activity detected'
-      : 'Unusual inactivity detected';
+    : 'Activity anomaly detected';
   return {
     id: incident.event_id, incidentId: incident.event_id, title,
     description: `${incidentDescription(incident)}${incident.simulation ? ' Backend simulation.' : ''}`, time: displayTime(incident.timestamp),

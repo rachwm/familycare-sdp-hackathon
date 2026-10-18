@@ -22,7 +22,7 @@ export class FallApiError extends Error {
 }
 
 const baseUrl = (
-  import.meta.env?.VITE_API_BASE_URL?.trim() || 'http://127.0.0.1:8000'
+  import.meta.env?.VITE_API_BASE_URL?.trim() || ''
 ).replace(/\/$/, '');
 
 function record(value: unknown): value is Record<string, unknown> {
