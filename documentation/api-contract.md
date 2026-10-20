@@ -1,29 +1,35 @@
 # FamilyCare API Contract
 
-This document defines how the fall detector, Elderly Home Companion and
-Family Dashboard communicate with the FamilyCare FastAPI backend.
+This document defines how the sensor and simulator inputs, Home Companion,
+Family Dashboard, SDP Coordinator Response Center, and Responder Dashboard
+communicate with the FamilyCare FastAPI backend.
 
 ## Current version
 
 - Schema version: `1.0`
+- Production API base URL: `https://familycare-sdp-hackathon.onrender.com`
 - Local API base URL: `http://127.0.0.1:8000`
 - Content type: `application/json`
 - Confidence scale: `0.0` to `1.0`
 - Timestamp format: ISO 8601 with Malaysia's UTC+08:00 offset
-- Live API documentation: `http://127.0.0.1:8000/docs`
+- Live API documentation: `https://familycare-sdp-hackathon.onrender.com/docs`
+- WebSocket: `wss://familycare-sdp-hackathon.onrender.com/ws`
 
-The current prototype uses normal HTTP requests. The Family Dashboard can
-poll `GET /api/incidents` every two or three seconds. A WebSocket connection
-may be added later without changing the event fields in this contract.
+The deployed frontend and API share one origin. Browser requests therefore use
+relative paths such as `/api/incidents`. Connected prototype views poll the
+incident API and also receive incident and reminder updates over `/ws`.
 
 ## Component responsibilities
 
 | Component | API responsibility |
 | --- | --- |
 | Fall detector or sensor simulator | Creates a possible-fall event |
-| Elderly Home Companion | Sends `resident_okay`, `resident_needs_help` or `timeout` |
+| Routine-anomaly detector or simulator | Creates an unusual-activity event |
+| Home Companion | Sends `resident_okay`, `resident_needs_help` or `timeout` |
 | Family Dashboard | Reads the incident list and current incident status |
-| FastAPI backend | Validates data and manages incident state transitions |
+| SDP Coordinator | Requests or assigns a responder and reviews incident progress |
+| Responder Dashboard | Records acceptance, travel, arrival, and the visit outcome |
+| FastAPI backend | Validates data, stores demo state, broadcasts updates, and manages transitions |
 
 ## Incident flow
 
@@ -116,7 +122,7 @@ The frontend should read these fields but should not manually calculate them.
 | `resident_response` | `null` | Final response received from the resident |
 | `response_timestamp` | `null` | Time the response or timeout was recorded |
 | `requires_responder` | `false` | Whether family or an SDP responder should act |
-| `responder_status` | `not_requested` | `not_requested`, `requested` or `resolved` |
+| `responder_status` | `not_requested` | `not_requested`, `requested`, `assigned`, `accepted`, `on_the_way`, `arrived` or `resolved` |
 | `responder_request_timestamp` | `null` | Time a responder was requested |
 | `resolution_timestamp` | `null` | Time the incident was resolved |
 
@@ -200,11 +206,13 @@ Returns the complete event, or `404 Not Found` when the ID does not exist.
 ### Submit the resident's response
 
 ```http
-POST /api/fall-events/{event_id}/response
+POST /api/incidents/{event_id}/response
 Content-Type: application/json
 ```
 
-The Home Companion sends one of the following request bodies.
+This shared route accepts a response for either a fall or routine-anomaly
+check-in. The fall-specific route remains available for compatibility. The
+Home Companion sends one of the following request bodies.
 
 Resident selected **I'm okay**:
 
@@ -269,9 +277,8 @@ returns `409 Conflict`.
 GET /api/incidents
 ```
 
-This is the recommended Family Dashboard endpoint. It currently returns fall
-incidents and can later include utility anomalies using the same incident
-view.
+This is the recommended shared dashboard endpoint. It returns both possible-fall
+and unusual-activity incidents using the same incident view.
 
 It can be filtered by one status:
 
@@ -384,7 +391,7 @@ the below-threshold result in `detection`.
 
 ```typescript
 await fetch(
-  `http://127.0.0.1:8000/api/fall-events/${eventId}/response`,
+  `/api/incidents/${eventId}/response`,
   {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -397,7 +404,7 @@ await fetch(
 
 ```typescript
 const response = await fetch(
-  "http://127.0.0.1:8000/api/incidents",
+  "/api/incidents",
 );
 
 const incidents = await response.json();
@@ -405,9 +412,14 @@ const incidents = await response.json();
 
 ## Prototype limitations
 
-- Incidents are stored in memory and disappear when the server restarts.
-- Authentication and resident authorization are outside the hackathon demo.
-- The current incident store contains fall events; utility anomalies will
-  require an additional shared event model before they appear here.
-- Real-time WebSocket delivery has not yet been added. Use short HTTP polling
-  for the integrated demo unless the team explicitly implements WebSockets.
+- Authentication and role-based authorization are outside the hackathon demo.
+- The public simulator, reset actions, dashboards, and API must not be used for
+  real resident monitoring or emergency response.
+- Demo incidents and reminders use lightweight prototype persistence and may
+  disappear after a Render restart, redeploy, or free-tier spin-down.
+- WebSocket delivery is best-effort and is not a guaranteed emergency
+  notification channel.
+- Sensor events, assignments, locations, travel estimates, and visit outcomes
+  shown in the demonstration are simulated unless explicitly identified as
+  model-evaluation evidence.
+- The fall model is preliminary and not clinically validated.
