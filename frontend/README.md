@@ -36,8 +36,8 @@ The Vite development server proxies `/api` to FastAPI, so the same Vite Network
 URL works on a phone on the same Wi-Fi. A production host must proxy `/api` to
 FastAPI or build with `VITE_API_BASE_URL` set to a browser-accessible backend
 origin with CORS configured. A remote browser cannot reach your Mac's
-`127.0.0.1` directly. The existing hosted demo has not been redeployed by this
-local change.
+`127.0.0.1` directly. The production Docker deployment serves the frontend and
+API from the same Render origin.
 
 Switch back to **Demo Mode** to use the nine original scenarios. Live Mode only
 shows incident fields and milestones actually recorded by the backend; it does
@@ -150,9 +150,10 @@ screenshot background. Replace these source references with standalone approved
 portrait assets when supplied. Logo and botanical accents are local SVG recreations.
 DM Sans loads from Google Fonts with system fallbacks.
 
-The backend, models, Home Companion, sensor simulators and API contracts are
-unchanged. Authentication, account editing and real responder dispatch remain
-outside this frontend milestone. The coordinator demo is described below.
+The integrated prototype includes the backend, models, Home Companion, sensor
+simulators, coordinator workflow, responder workflow, and API contract.
+Authentication, account editing, and real emergency dispatch remain outside the
+hackathon scope. The coordinator interface is described below.
 
 
 ## SDP Coordinator Dashboard
@@ -246,11 +247,10 @@ are mock-only. Only the approved portrait region is displayed from the responder
 reference image. No live GPS, verified clinical assessment, real notification
 receipt or external emergency-service integration is claimed.
 
-Remaining dependencies are an agreed FastAPI incident/responder contract,
-authentication and coordinator role checks, live responder availability and
-milestone signals, stored visit reports, notification acknowledgements and
-verified map/ETA data. No backend endpoints have been invented, and Python,
-ML, sensor processing and Home Companion implementation remain unchanged.
+The current FastAPI contract persists prototype incident, responder, and visit
+report state. Production deployment still requires authentication and role
+checks, live responder availability and milestone signals, durable storage,
+notification acknowledgements, and verified map/ETA data.
 
 ### Files in this refinement
 

@@ -6,7 +6,7 @@
 
 - Windows PowerShell, VS Code, Python virtual environment in repo root (`.venv`), Node.js, frontend dependencies, and `cloudflared` installed.
 - Three **separate** terminals (FastAPI, Vite, Cloudflare). Keep all three open.
-- Use the Git branch `integration/full-prototype-test`. **Do not** use `main`: the full integrated frontend is on the integration branch.
+- Use the Git branch `main`, which contains the submission-ready integrated prototype.
 - Only synthetic demonstration data: the publicly accessible simulator and API have no sign-in protection. Never expose real resident information.
 
 ### Before starting: update the local code
@@ -16,8 +16,8 @@ Open Terminal 1 in VS Code, starting from the repository root:
 ```powershell
 cd "C:\Users\rachel\Documents\GitHub\familycare-sdp-hackathon"
 git status --short
-git switch integration/full-prototype-test
-git pull --ff-only origin integration/full-prototype-test
+git switch main
+git pull --ff-only origin main
 git rev-parse --short HEAD
 ```
 
@@ -25,7 +25,7 @@ If Git refuses to pull due to modified local files, **do not force it or delete 
 
 ```powershell
 git stash push -m "Backup local Cloudflare settings" -- frontend/vite.config.ts
-git pull --ff-only origin integration/full-prototype-test
+git pull --ff-only origin main
 ```
 
 Keep the stash until you compare it with the newer settings. Do not immediately `git stash pop`, since the current Vite config already accepts `*.trycloudflare.com` development hosts.

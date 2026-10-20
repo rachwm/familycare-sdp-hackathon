@@ -8,7 +8,7 @@ This repo includes a **multi-stage `Dockerfile`**, `render.yaml` Blueprint and a
 
 ## Prerequisites
 
-- Latest tested code is merged into **`integration/full-prototype-test`** on GitHub. The default `main` branch does not contain the integrated React application.
+- Latest tested code is merged into **`main`** on GitHub. The default branch contains the integrated React application.
 - A Render account with access to the GitHub repo `rachwm/familycare-sdp-hackathon`.
 - The `render.yaml`, root `Dockerfile` and updated `backend/main.py` are present on **the same branch** to be deployed.
 - Use a **single web service** initially. Do not deploy FamilyCare's frontend as an unrelated static site without connecting its API/WebSockets.
@@ -18,7 +18,7 @@ This repo includes a **multi-stage `Dockerfile`**, `render.yaml` Blueprint and a
 1. Open https://dashboard.render.com and log in.
 2. Choose **New > Blueprint**.
 3. Connect GitHub and select **`rachwm/familycare-sdp-hackathon`**.
-4. **Choose branch `integration/full-prototype-test`**, not `main`.
+4. **Choose branch `main`**, not `main`.
 5. Leave **Blueprint Path** as root `render.yaml` and create/deploy the Blueprint.
 6. The Blueprint declares a **Docker web service** named `familycare-sdp-hackathon`, initially on the **Free** compute plan, with health check `/health`. Render will build the frontend and Python runtime using the root Dockerfile.
 7. When Render reports **Live**, open the HTTPS `onrender.com` URL **shown in your Render dashboard**. Do not assume the exact hostname before creation.
@@ -30,7 +30,7 @@ Render may take longer to deploy the first time due to Python scientific depende
 
 If you'd rather configure it explicitly:
 1. Render > **New > Web Service** > connect the GitHub repo.
-2. **Branch:** `integration/full-prototype-test`.
+2. **Branch:** `main`.
 3. **Language/Runtime:** **Docker**.
 4. **Dockerfile path:** `./Dockerfile`; **Docker build context:** `.`.
 5. **Region:** choose **Singapore** if available for proximity to Malaysia.
