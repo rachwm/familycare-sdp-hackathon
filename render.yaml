@@ -1,0 +1,15 @@
+# Render Blueprint: a single Docker web service with one HTTPS origin for
+# React pages, FastAPI, and WebSockets. Import through Render > New > Blueprint.
+services:
+  - type: web
+    name: familycare-sdp-hackathon
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: integration/full-prototype-test
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FAMILYCARE_ENVIRONMENT
+        value: demo

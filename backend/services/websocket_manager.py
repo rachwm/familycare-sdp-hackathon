@@ -1,6 +1,7 @@
-from fastapi import WebSocket
-from typing import List
 import json
+from typing import List
+
+from fastapi import WebSocket
 
 class ConnectionManager:
     def __init__(self):
@@ -17,12 +18,14 @@ class ConnectionManager:
     async def broadcast(self, message_type: str, data: dict):
         """Broadcasts real-time events to all connected frontend dashboards."""
         payload = json.dumps({"type": message_type, "data": data})
-        for connection in self.active_connections:
+        dropped_connections: list[WebSocket] = []
+        for connection in list(self.active_connections):
             try:
                 await connection.send_text(payload)
             except Exception:
-                # Handle dropped connections gracefully
-                pass
+                dropped_connections.append(connection)
+        for connection in dropped_connections:
+            self.disconnect(connection)
 
 # Global instance to be imported by your routes
 manager = ConnectionManager()
