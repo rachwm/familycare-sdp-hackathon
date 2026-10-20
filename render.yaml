@@ -6,7 +6,7 @@ services:
     runtime: docker
     plan: free
     region: singapore
-    branch: integration/full-prototype-test
+    branch: main
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
